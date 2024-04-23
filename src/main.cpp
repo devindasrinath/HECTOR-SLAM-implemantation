@@ -1,12 +1,14 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <math.h>
+#include <eigen3/Eigen/Dense>
 
 #define GRID_STEP_SIZE 5
 #define GRID_WIDTH 840
 #define GRID_HEIGTH 840
 
 void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points);
+Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
 
 struct GridParameters{
     size_t grid_height;
@@ -16,6 +18,7 @@ struct GridParameters{
     sf::Color grid_color;
 
 };
+
 
 
 class Grid{
@@ -131,9 +134,9 @@ class Grid{
 #define NUM_X_CELLS GRID_WIDTH/GRID_STEP_SIZE
 #define NUM_Y_CELLS GRID_HEIGTH/GRID_STEP_SIZE
 #define NUM_CELLS NUM_X_CELLS*NUM_Y_CELLS
-#define PROB_OCCUPIED 0.8
+#define PROB_OCCUPIED 0.95
 #define PROB_PRIOR 0.5
-#define PROB_FREE 0.2
+#define PROB_FREE 0.05
 
 #define LOGS_ODDS_RATIO(x)  log(x/(1 - x))
 #define PROB(x)  1/(1+(1/std::pow(10, x)))
@@ -168,11 +171,10 @@ void init_cells(){
 
 
 void occupancy_grid_mapping(){
-    bool came = false;
     for(auto &cell:cells){
         auto it  = std::find(cells_detected.begin(), cells_detected.end(), std::make_pair(cell.x,cell.y));
         if(it != cells_detected.end()){
-            came = true;
+
             if((cell.x == occupied_cell.first) && (cell.y == occupied_cell.second)){
                 /* CASE 1 : cell occupied*/
                 cell.log_odds_ratio = LOGS_ODDS_RATIO(PROB_OCCUPIED) + cell.pre_log_odds_ratio - LOGS_ODDS_RATIO(PROB_PRIOR);
@@ -335,10 +337,62 @@ std::pair<int,int> find_occupied_cell_cordinates(double x0, double y0, double x1
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+double solveQuadratic(double a, double b, double c) {
+    static int i = 0;
+
+    if(i>=360){
+        i = 0;
+    }
+    double discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) {
+     //   std::cout << "No real roots\n";
+    } else if (discriminant == 0) {
+        double root = -b / (2 * a);
+        return root;
+     //   std::cout << "One real root: " << root << "\n";
+    } else {
+        double root1 = (-b + sqrt(discriminant)) / (2 * a);
+        double root2 = (-b - sqrt(discriminant)) / (2 * a);
+        if(root1>0 && root2>0){
+            if(i<180){
+                return root1;
+            }
+            else{
+                return root2;
+            }
+        }
+        else if (root1>0){
+            return root1;
+        }
+        else if (root2>0){
+            return root2;
+        }
+        
+        
+      //  std::cout << "Two real roots: " << root1 << " and " << root2 << "\n";
+    }
+    i++;
+}
+
+
+double circle_inside_distance(std::pair<double,double> robot_pos,double beam_angle,double radius){
+
+    auto a =1;
+    auto b = 2 *(robot_pos.first * sin(beam_angle) + robot_pos.second * cos(beam_angle));
+    auto c = robot_pos.first*robot_pos.first + robot_pos.second*robot_pos.second - radius*radius;
+
+    return solveQuadratic(a,b,c);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 std::pair<int,int> robot_pos((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
 double distances[360]={};
 
-void get_data(){
+void get_data_0(){
 
     // for (size_t i = 0; i < 360; i++)
     // {
@@ -347,9 +401,29 @@ void get_data(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= 13;//circle
+        distances[i]= 40;//circle
+        //std::cout<<distances[i]<<std::endl;
     }
 }
+
+std::pair<int,int> robot_pos1((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
+void get_data_1(){
+    robot_pos1.first +=1;
+    robot_pos1.second +=1;
+    // for (size_t i = 0; i < 360; i++)
+    // {
+    //     double f = (double)rand() / RAND_MAX;
+    //     distances[i]= 0.1 + f * (28 - 0.1);
+    // }
+    for (size_t i = 0; i < 360; i++)
+    {
+        distances[i]= circle_inside_distance(std::make_pair(10,10),2*M_PI*i/360,40);//circle
+        
+    }
+}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 
 
 auto angle_min = -3.1415927410125732;
@@ -375,21 +449,21 @@ int main() {
 
     std::vector<sf::Vertex> lines;
     init_cells();
-    double angle = angle_min;
-    get_data();
+    double angle = 0;
+    get_data_0();
 
     std::vector<std::pair<int, int>> detetcted_all_cells;
-    for(auto data :ranges)
+    for(auto data :distances)
     {
-        if(data<0.1){
-            angle-=0.012466637417674065;
-            continue;
-        }
+        // if(data<0.1){
+        //     angle-=0.012466637417674065;
+        //     continue;
+        // }
         cells_detected.clear();
         
-        auto y1 = data*20*cos(angle) + robot_pos.first;
-        auto x1 = data*20*sin(angle)+ robot_pos.second;
-        angle-=0.012466637417674065;//2*M_PI/360;
+        auto y1 = data*cos(angle) + robot_pos.first;
+        auto x1 = data*sin(angle)+ robot_pos.second;
+        angle+=2*M_PI/360;
         
 
         occupied_cell = find_occupied_cell_cordinates(robot_pos.first,robot_pos.second,x1,y1);
@@ -411,6 +485,48 @@ int main() {
  
         detetcted_all_cells.insert(detetcted_all_cells.end(), cells_detected.begin(), cells_detected.end());
     }
+
+
+     get_data_1();
+     angle = 0;
+
+std::vector<Eigen::Vector2d> scan_endpoints;
+
+    for(auto data :distances)
+    {
+        // if(data<0.1){
+        //     angle-=0.012466637417674065;
+        //     continue;
+        // }
+        // cells_detected.clear();
+        
+        // auto y1 = data*cos(angle) + robot_pos1.first;
+        // auto x1 = data*sin(angle)+ robot_pos1.second;
+        
+        
+
+        // occupied_cell = find_occupied_cell_cordinates(robot_pos1.first,robot_pos1.second,x1,y1);
+
+        // filter_detect_cells(robot_pos1.first , robot_pos1.second, x1,y1,cells_detected);
+
+        // auto it = std::find(cells_detected.begin(), cells_detected.end(), occupied_cell);
+
+        // if (it == cells_detected.end()) {
+        //     cells_detected.push_back(occupied_cell);
+        // } 
+        // occupancy_grid_mapping();
+
+        // // auto p_line = grid.draw_line(robot_pos.first,robot_pos.second,round(x1),round(y1));
+        // auto p_line = grid.draw_line_without_grid(robot_pos1.first*GRID_STEP_SIZE,robot_pos1.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
+        
+        // lines.emplace_back(*p_line);
+        // lines.emplace_back(*(p_line+1U));
+ 
+        // detetcted_all_cells1.insert(detetcted_all_cells1.end(), cells_detected.begin(), cells_detected.end());
+
+        scan_endpoints.emplace_back(Eigen::Vector2d(data*sin(angle),data*cos(angle)));
+        angle+=2*M_PI/360;
+    }
     
 
     std::vector<sf::RectangleShape*> cells_for_draw;
@@ -424,6 +540,10 @@ int main() {
         cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
     }
     
+    
+Eigen::Vector3d g = hector_slam(Eigen::Vector3d(robot_pos.first,robot_pos.second,0) , scan_endpoints);
+
+std::cout<<g<<std::endl;
 
     // Run the main loop
     while (window.isOpen()) {
@@ -445,8 +565,8 @@ int main() {
         for(auto cell:cells_for_draw){
             window.draw(*cell);
         }
-        // window.draw(&lines[0],720,sf::Lines);
-        // window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
+        window.draw(&lines[0],1440,sf::Lines);
+        window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
         // Display the content of the window
         window.display();
     }
@@ -457,85 +577,15 @@ int main() {
 #define DIFF(a,b) a - b
 #define M_P(x,y) map_value(x,y)
 #define D_X(x,y) map_derivative_x(x,y)
-#define D_y(x,y) map_derivative_y(x,y)
-
-double map_value(double x, double y){
-    int x0 = floor(x);
-    int x1 = ceil(x);
-    int y0 = floor(x);
-    int y1 = ceil(x);
-
-    int cell_index_00 = findCellIndexByXAndY(x0, y0);
-    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
-
-    int cell_index_01 = findCellIndexByXAndY(x0, y1);
-    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
-
-    int cell_index_10 = findCellIndexByXAndY(x1, y0);
-    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
-
-    int cell_index_11 = findCellIndexByXAndY(x1, y1);
-    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
-
-    return (DIFF(y,y0)/DIFF(y1,y0))*((DIFF(x,x0)/DIFF(x1,x0)*M_P_11) + (DIFF(x1,x)/DIFF(x1,x0)*M_P_01 )) +
-            (DIFF(y1,y)/DIFF(y1,y0))*((DIFF(x,x0)/DIFF(x1,x0)*M_P_10) + (DIFF(x1,x)/DIFF(x1,x0)*M_P_00 )) ;
-
-}
-
-double map_derivative_x(double y,double x){
-    int x0 = floor(x);
-    int x1 = ceil(x);
-    int y0 = floor(x);
-    int y1 = ceil(x);
-
-    int cell_index_00 = findCellIndexByXAndY(x0, y0);
-    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
-
-    int cell_index_01 = findCellIndexByXAndY(x0, y1);
-    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
-
-    int cell_index_10 = findCellIndexByXAndY(x1, y0);
-    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
-
-    int cell_index_11 = findCellIndexByXAndY(x1, y1);
-    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
-
-    return (DIFF(y,y0)/DIFF(y1,y0))*(M_P_11 - M_P_01 ) +
-            (DIFF(y1,y)/DIFF(y1,y0))*(M_P_10 - M_P_00 ) ;
-
-}
-
-double map_derivative_y(double y,double x){
-    int x0 = floor(x);
-    int x1 = ceil(x);
-    int y0 = floor(x);
-    int y1 = ceil(x);
-
-    int cell_index_00 = findCellIndexByXAndY(x0, y0);
-    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
-
-    int cell_index_01 = findCellIndexByXAndY(x0, y1);
-    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
-
-    int cell_index_10 = findCellIndexByXAndY(x1, y0);
-    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
-
-    int cell_index_11 = findCellIndexByXAndY(x1, y1);
-    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
-
-    return (DIFF(x,x0)/DIFF(x1,x0))*(M_P_11 - M_P_10 ) +
-            (DIFF(x1,x)/DIFF(x1,x0))*(M_P_01 - M_P_00 ) ;
-
-}
-
+#define D_Y(x,y) map_derivative_y(x,y)
 
 bool isInteger(double value) {
-    return std::trunc(value) == value;
+    return ceil(value) == floor(value);
 }
 
 int findCellIndexByXAndY(int x, int y) {
     int i = 0;
-    for (const auto& cell : cells) {
+    for (const auto cell : cells) {
         if (cell.x == x && cell.y == y) {
             return i;
         }
@@ -544,7 +594,181 @@ int findCellIndexByXAndY(int x, int y) {
     return -1;
 }
 
+double map_value(double x, double y){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(y);
+    int y1 = ceil(y);
 
-void hector_slam(int p_y ,int p_x ,int p_psi){
-    xi = 
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+    if(x0!=x1 && y0!=y1){
+        return (DIFF(y,y0)/DIFF(y1,y0))*(( (DIFF(x,x0)/DIFF(x1,x0))*M_P_11) + ((DIFF(x1,x)/DIFF(x1,x0))*M_P_01) ) +
+                (DIFF(y1,y)/DIFF(y1,y0))*( ((DIFF(x,x0)/DIFF(x1,x0))*M_P_10) + ((DIFF(x1,x)/DIFF(x1,x0))*M_P_00) ) ;
+    }
+    else if(x0!=x1 ){
+        return (DIFF(x,x0)/DIFF(x1,x0))*M_P_11 + (DIFF(x1,x)/DIFF(x1,x0))*M_P_01;
+    }
+    else if(y0!=y1 ){
+        return (DIFF(y,y0)/DIFF(y1,y0))*M_P_01 + (DIFF(y1,y)/DIFF(y1,y0))*M_P_00;
+    }
+    else{
+        return M_P_00;
+    }
+
 }
+
+double map_derivative_x(double x,double y){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(y);
+    int y1 = ceil(y);
+
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+
+
+    if(y0!=y1 && x0!=x1){
+        return (DIFF(y,y0)/DIFF(y1,y0))*(M_P_11 - M_P_01 ) +
+                (DIFF(y1,y)/DIFF(y1,y0))*(M_P_10 - M_P_00 ) ;
+    }
+    else if(x0!=x1){
+        return M_P_11 - M_P_01;
+    }
+    else{
+        return 0;
+    }
+
+}
+
+double map_derivative_y(double x,double y){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(y);
+    int y1 = ceil(y);
+
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+
+    if(x0!=x1){
+    return (DIFF(x,x0)/DIFF(x1,x0))*(M_P_11 - M_P_10 ) +
+            (DIFF(x1,x)/DIFF(x1,x0))*(M_P_01 - M_P_00 ) ;
+    }
+    else if(y0!=y1){
+        return M_P_11 - M_P_10;
+    }
+    else{
+        return 0;
+    }
+
+}
+
+
+
+
+Eigen::Vector2d get_world_coordinate_for_scan_endpoint(Eigen::Vector3d robot_pos ,Eigen::Vector2d scan_point){
+    Eigen::Matrix<double, 2, 2> rot_matrix;
+
+    rot_matrix(0,0) = cos(robot_pos(2));
+    rot_matrix(0,1) = -sin(robot_pos(2));
+    rot_matrix(1,0) = sin(robot_pos(2));
+    rot_matrix(1,1) = cos(robot_pos(2));
+
+    Eigen::Vector2d robot_pos_xy(robot_pos(0),robot_pos(1));
+
+    return rot_matrix*scan_point + robot_pos_xy;
+
+}
+
+Eigen::Matrix<double,2, 3> world_cordinate_derivative(double robot_angle ,Eigen::Vector2d scan_point){
+
+    Eigen::Matrix<double,2, 3> world_cordinate_derivative_matrix;
+
+
+    world_cordinate_derivative_matrix(0,0) = 1;
+    world_cordinate_derivative_matrix(0,1) = 0;
+    world_cordinate_derivative_matrix(0,2) = -sin(robot_angle)*scan_point(0)-cos(robot_angle)*scan_point(1);
+    world_cordinate_derivative_matrix(1,0) = 0;
+    world_cordinate_derivative_matrix(1,1) = 1;
+    world_cordinate_derivative_matrix(1,2) = cos(robot_angle)*scan_point(0)-sin(robot_angle)*scan_point(1);
+
+    return world_cordinate_derivative_matrix;
+
+}
+
+Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints){
+
+    Eigen::Matrix<double, 3, 1> part_1_1;
+    part_1_1.setZero();
+
+    Eigen::Matrix<double, 3, 3> part_1_2;
+    part_1_2.setZero();
+
+    for(auto scan_endpoint : scan_endpoints){
+        auto scan_world_cordinate = get_world_coordinate_for_scan_endpoint(robot_pos, scan_endpoint);
+
+        if(isInteger(scan_world_cordinate(0)) || isInteger(scan_world_cordinate(1))){
+            continue;
+        }
+
+        std::cout<<scan_world_cordinate<<std::endl;
+        /* ∇M(S_i(ξ)) */
+        Eigen::Vector2d full_derivative_transpose(D_X(scan_world_cordinate(0),scan_world_cordinate(1)) , D_Y(scan_world_cordinate(0),scan_world_cordinate(1)));
+
+        /* (∂S_i(ξ)/∂ξ)*/
+        Eigen::Matrix<double,2, 3> world_cordinate_derivative_matrix = world_cordinate_derivative(robot_pos(2) ,scan_endpoint);
+
+        /* ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ)*/
+        Eigen::Matrix<double, 1, 3> part_1 = (full_derivative_transpose.transpose()*world_cordinate_derivative_matrix);
+
+        /* [1 − M(S_i(ξ))] */
+        double part_2 = 1 - M_P(scan_world_cordinate(0),scan_world_cordinate(1));
+
+        /* ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * [1 − M(S_i(ξ))]*/
+        Eigen::Matrix<double, 3, 1> part_3 = part_1.transpose() * part_2;
+
+        /* summation */
+        part_1_1+=part_3;
+
+        /* ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )*/
+        Eigen::Matrix<double, 3, 3>  part_4 = part_1.transpose()*part_1;
+
+        part_1_2+=part_4;
+
+    }
+
+    return (part_1_2.inverse()*part_1_1);
+
+}
+
+
