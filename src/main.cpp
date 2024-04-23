@@ -454,6 +454,97 @@ int main() {
     return 0;
 }
 
+#define DIFF(a,b) a - b
+#define M_P(x,y) map_value(x,y)
+#define D_X(x,y) map_derivative_x(x,y)
+#define D_y(x,y) map_derivative_y(x,y)
+
+double map_value(double x, double y){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(x);
+    int y1 = ceil(x);
+
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+    return (DIFF(y,y0)/DIFF(y1,y0))*((DIFF(x,x0)/DIFF(x1,x0)*M_P_11) + (DIFF(x1,x)/DIFF(x1,x0)*M_P_01 )) +
+            (DIFF(y1,y)/DIFF(y1,y0))*((DIFF(x,x0)/DIFF(x1,x0)*M_P_10) + (DIFF(x1,x)/DIFF(x1,x0)*M_P_00 )) ;
+
+}
+
+double map_derivative_x(double y,double x){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(x);
+    int y1 = ceil(x);
+
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+    return (DIFF(y,y0)/DIFF(y1,y0))*(M_P_11 - M_P_01 ) +
+            (DIFF(y1,y)/DIFF(y1,y0))*(M_P_10 - M_P_00 ) ;
+
+}
+
+double map_derivative_y(double y,double x){
+    int x0 = floor(x);
+    int x1 = ceil(x);
+    int y0 = floor(x);
+    int y1 = ceil(x);
+
+    int cell_index_00 = findCellIndexByXAndY(x0, y0);
+    double M_P_00 = (cell_index_00 == -1) ? PROB_PRIOR : cells[cell_index_00].prob_occupied;
+
+    int cell_index_01 = findCellIndexByXAndY(x0, y1);
+    double M_P_01 = (cell_index_01 == -1) ? PROB_PRIOR : cells[cell_index_01].prob_occupied;
+
+    int cell_index_10 = findCellIndexByXAndY(x1, y0);
+    double M_P_10 = (cell_index_10 == -1) ? PROB_PRIOR : cells[cell_index_10].prob_occupied;
+
+    int cell_index_11 = findCellIndexByXAndY(x1, y1);
+    double M_P_11 = (cell_index_11 == -1) ? PROB_PRIOR : cells[cell_index_11].prob_occupied;
+
+    return (DIFF(x,x0)/DIFF(x1,x0))*(M_P_11 - M_P_10 ) +
+            (DIFF(x1,x)/DIFF(x1,x0))*(M_P_01 - M_P_00 ) ;
+
+}
 
 
+bool isInteger(double value) {
+    return std::trunc(value) == value;
+}
 
+int findCellIndexByXAndY(int x, int y) {
+    int i = 0;
+    for (const auto& cell : cells) {
+        if (cell.x == x && cell.y == y) {
+            return i;
+        }
+        i++;
+    }
+    return -1;
+}
+
+
+void hector_slam(int p_y ,int p_x ,int p_psi){
+    xi = 
+}
