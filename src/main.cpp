@@ -407,7 +407,7 @@ void get_data_0(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= 40;//circle
+        distances[i]= 80;//circle
         //std::cout<<distances[i]<<std::endl;
     }
 }
@@ -423,7 +423,7 @@ void get_data_1(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= circle_inside_distance(std::make_pair(0.4,0.4),2*M_PI*i/360,40);//circle
+        distances[i]= circle_inside_distance(std::make_pair(0.1,-0.2),2*M_PI*i/360,80);//circle
         
     }
 }
@@ -546,10 +546,22 @@ std::vector<Eigen::Vector2d> scan_endpoints;
         cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
     }
     
-    
-Eigen::Vector3d g = hector_slam(Eigen::Vector3d(robot_pos.first,robot_pos.second,0) , scan_endpoints);
+    Eigen::Vector3d change_value ;
+    change_value.setZero();
 
-std::cout<<g<<std::endl;
+    Eigen::Vector3d robot_pose_old(robot_pos.first,robot_pos.second,0);
+
+// for(auto i=0;i<50;i++)
+// {
+    auto change_value_new = change_value + hector_slam(robot_pose_old , scan_endpoints);
+    change_value = change_value_new;
+
+    auto robot_pose_old_new = robot_pose_old+ change_value;
+    robot_pose_old=robot_pose_old_new;
+
+    std::cout<<"\nchange_value : " <<change_value.transpose()<<std::endl;
+    std::cout<<"new_pos : " <<robot_pose_old.transpose()<<std::endl;
+// }
 
     // Run the main loop
     while (window.isOpen()) {
@@ -779,7 +791,7 @@ Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vecto
         //     continue;
         // }
 
-        std::cout<<scan_world_cordinate.transpose()<<std::endl;
+        //std::cout<<scan_world_cordinate.transpose()<<std::endl;
         /* ∇M(S_i(ξ)) */
         Eigen::Vector2d full_derivative_transpose(D_X(scan_world_cordinate(0),scan_world_cordinate(1)) , D_Y(scan_world_cordinate(0),scan_world_cordinate(1)));
 
@@ -793,8 +805,8 @@ Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vecto
 
         /* [1 − M(S_i(ξ))] */
         double part_2 = 1 - M_P(scan_world_cordinate(0),scan_world_cordinate(1));
-        // part_2  = (part_2>=0.95)? 0.95 : part_2;
-        // part_2  = (part_2<=0.05)? 0.05 : part_2;
+        // part_2  = (part_2>=0.9)? 0.9 : part_2;
+        // part_2  = (part_2<=0.1)? 0.1 : part_2;
 
         auto kk = part_1.transpose();
 
