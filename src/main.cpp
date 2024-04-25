@@ -423,7 +423,7 @@ void get_data_1(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= circle_inside_distance(std::make_pair(0.1,-0.2),2*M_PI*i/360,80);//circle
+        distances[i]= circle_inside_distance(std::make_pair(0.2,0.2),2*M_PI*i/360,80);//circle
         
     }
 }
