@@ -1,22 +1,8 @@
 #include "main.h"
 
-#define GRID_STEP_SIZE 5
+#define GRID_STEP_SIZE 10
 #define GRID_WIDTH 840
 #define GRID_HEIGTH 840
-
-void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points);
-Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
-
-struct GridParameters{
-    size_t grid_height;
-    size_t grid_width;
-    size_t step_size;
-    std::pair<size_t,size_t> origin;
-    sf::Color grid_color;
-
-};
-
-
 
 class Grid{
 
@@ -128,30 +114,20 @@ class Grid{
 
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-#define NUM_X_CELLS GRID_WIDTH/GRID_STEP_SIZE
-#define NUM_Y_CELLS GRID_HEIGTH/GRID_STEP_SIZE
-#define NUM_CELLS NUM_X_CELLS*NUM_Y_CELLS
-#define PROB_OCCUPIED 0.9
-#define PROB_PRIOR 0.5
-#define PROB_FREE 0.1
 
 double LOGS_ODDS_RATIO(double x)  {
     return log(x/(1 - x));
 }
+
 double PROB(double x)  {
     return 1/(1+(1/std::pow(10, x)));
 }
+
 double POINT_DIS_SQ(double x0,double y0,double x1,double y1) {
     return std::pow(y1-y0 ,2) + std::pow(x1-x0 ,2) ;
 }
 
-struct Cell{
-    int x;
-    int y;
-    double log_odds_ratio;
-    double pre_log_odds_ratio;
-    double prob_occupied;
-};
+
 
 std::vector<std::pair<int,int>> cells_detected;
 std::pair<int,int> occupied_cell={};
@@ -328,7 +304,7 @@ int get_sign(double x){
     return int(x/abs(x));
 }
 
-std::pair<int,int> find_occupied_cell_cordinates(double x0, double y0, double x1, double y1){
+std::pair<int,int> find_occupied_cell_coordinates(double x0, double y0, double x1, double y1){
 
     int xt,yt=0;
 
@@ -404,7 +380,7 @@ void get_data_0(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= 80;//circle
+        distances[i]= 40;//circle
         //std::cout<<distances[i]<<std::endl;
     }
 }
@@ -420,7 +396,7 @@ void get_data_1(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= circle_inside_distance(std::make_pair(0.2,0.2),2*M_PI*i/360,80);//circle
+        distances[i]= circle_inside_distance(std::make_pair(0.2,0.2),2*M_PI*i/360,40);//circle
         
     }
 }
@@ -441,7 +417,7 @@ double ranges[] = {0.0, 1.3990000486373901, 1.399999976158142, 1.401000022888183
 
 int main() {
     // Create the window
-    sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
+   // sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
     GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, GRID_STEP_SIZE, std::make_pair(GRID_STEP_SIZE/2 ,GRID_STEP_SIZE/2),sf::Color(0,100,0) };
 
@@ -469,7 +445,7 @@ int main() {
         angle+=2*M_PI/360;
         
 
-        occupied_cell = find_occupied_cell_cordinates(robot_pos.first,robot_pos.second,x1,y1);
+        occupied_cell = find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
 
         filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1,cells_detected);
 
@@ -508,7 +484,7 @@ std::vector<Eigen::Vector2d> scan_endpoints;
         
         
 
-        // occupied_cell = find_occupied_cell_cordinates(robot_pos1.first,robot_pos1.second,x1,y1);
+        // occupied_cell = find_occupied_cell_coordinates(robot_pos1.first,robot_pos1.second,x1,y1);
 
         // filter_detect_cells(robot_pos1.first , robot_pos1.second, x1,y1,cells_detected);
 
@@ -543,62 +519,67 @@ std::vector<Eigen::Vector2d> scan_endpoints;
         cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
     }
     
-    Eigen::Vector3d change_value ;
-    change_value.setZero();
+    Eigen::Vector3d total_change_value ;
+    total_change_value.setZero();
 
-    Eigen::Vector3d robot_pose_old(robot_pos.first,robot_pos.second,0);
+    Eigen::Vector3d robot_pose_old(robot_pos.first ,robot_pos.second,0);
 
-// for(auto i=0;i<50;i++)
-// {
-    auto change_value_new = change_value + hector_slam(robot_pose_old , scan_endpoints);
-    change_value = change_value_new;
+for(auto i=0;i<1000;i++)
+{
+    auto change_value = hector_slam(robot_pose_old , scan_endpoints);
+    total_change_value+=change_value;
+    robot_pose_old += change_value;
 
-    auto robot_pose_old_new = robot_pose_old+ change_value;
-    robot_pose_old=robot_pose_old_new;
-
-    std::cout<<"\nchange_value : " <<change_value.transpose()<<std::endl;
+    std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
     std::cout<<"new_pos : " <<robot_pose_old.transpose()<<std::endl;
-// }
+}
 
     // Run the main loop
-    while (window.isOpen()) {
-        // Handle events
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
+    // while (window.isOpen()) {
+    //     // Handle events
+    //     sf::Event event;
+    //     while (window.pollEvent(event)) {
+    //         if (event.type == sf::Event::Closed)
+    //             window.close();
+    //     }
 
-        // Clear the window
-        window.clear(sf::Color::Black);
+    //     // Clear the window
+    //     window.clear(sf::Color::Black);
 
         
-        window.draw(*p_grid_text);
-        for(auto cell:cells_for_draw1){
-            window.draw(*cell);
-        }
-        for(auto cell:cells_for_draw){
-            window.draw(*cell);
-        }
-        window.draw(&lines[0],720,sf::Lines);
-        window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
-        // Display the content of the window
-        window.display();
-    }
+    //     window.draw(*p_grid_text);
+    //     for(auto cell:cells_for_draw1){
+    //         window.draw(*cell);
+    //     }
+    //     for(auto cell:cells_for_draw){
+    //         window.draw(*cell);
+    //     }
+    //     window.draw(&lines[0],720,sf::Lines);
+    //     window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
+    //     // Display the content of the window
+    //     window.display();
+    // }
 
     return 0;
 }
 
+/*
+* Calculate the difference between 2 values
+*/
 double DIFF(double a,double b) {
     return (a-b);
-    }
+}
 
+/*
+* Check weather the given value is integer or not
+*/
 bool isInteger(double value) {
     return ceil(value) == floor(value);
 }
 
-#define NO_CELL -1
-
+/*
+* Check and retrieve cell index from the cells array according to the x and y coordinates
+*/
 int findCellIndexByXAndY(int x, int y) {
   
     for (auto cell_index = 0; cell_index<NUM_CELLS; cell_index++) {
@@ -606,7 +587,7 @@ int findCellIndexByXAndY(int x, int y) {
             return cell_index;
         }
     }
-    return -1;
+    return NO_CELL;
 }
 
 /*
@@ -737,9 +718,9 @@ Eigen::Vector2d get_world_coordinates(Eigen::Vector3d robot_pos ,Eigen::Vector2d
 }
 
 /*
-* Get gradient of the position vector of the given point with respect to the world coordinate frame
+* Get gradient of map value of the position vector of the given point with respect to the world coordinate frame
 */
-Eigen::Matrix<double,2, 3> D_world_coordinates(double robot_angle ,Eigen::Vector2d scan_point){
+Eigen::Matrix<double,2, 3> D_map(double robot_angle ,Eigen::Vector2d scan_point){
 
     Eigen::Matrix<double,2, 3> world_coordinate_derivative_matrix;
 
@@ -757,61 +738,41 @@ Eigen::Matrix<double,2, 3> D_world_coordinates(double robot_angle ,Eigen::Vector
 
 }
 
-
-
+/*
+* HECTOR SLAM algorithm for calculate mosts probable deviation from the previous point
+*/
 Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints){
 
-    Eigen::Matrix<double, 3, 1> part_1_1;
-    part_1_1.setZero();
+    Eigen::Matrix<double, 3, 1> sum_of_scaled_jacobian_matrixes = Eigen::Matrix<double, 3, 1>::Zero();
 
-    Eigen::Matrix<double, 3, 3> part_1_2;
-    part_1_2.setZero();
+    Eigen::Matrix<double, 3, 3> sum_of_hessian_matrixes = Eigen::Matrix<double, 3, 3>::Zero();
 
     for(auto scan_endpoint : scan_endpoints){
-        auto scan_world_cordinate = get_world_coordinates(robot_pos, scan_endpoint);
 
-        // if(isInteger(scan_world_cordinate(0)) || isInteger(scan_world_cordinate(1))){
-        //     continue;
-        // }
+        /* M (S_i(ξ))]*/
+        auto scan_world_coordinates = get_world_coordinates(robot_pos, scan_endpoint);
 
-        //std::cout<<scan_world_cordinate.transpose()<<std::endl;
         /* ∇M(S_i(ξ)) */
-        Eigen::Vector2d full_derivative_transpose(D_X(scan_world_cordinate(0),scan_world_cordinate(1)) , D_Y(scan_world_cordinate(0),scan_world_cordinate(1)));
+        Eigen::Matrix<double, 1, 2> gradient_of_scan_world_coordinates(D_X(scan_world_coordinates(0),scan_world_coordinates(1)) , D_Y(scan_world_coordinates(0),scan_world_coordinates(1)));
 
         /* (∂S_i(ξ)/∂ξ)*/
-        Eigen::Matrix<double,2, 3> world_coordinate_derivative_matrix = D_world_coordinates(robot_pos(2) ,scan_endpoint);
-
-        auto pp = full_derivative_transpose.transpose();
+        Eigen::Matrix<double,2, 3> gradient_of_map = D_map(robot_pos(2) ,scan_endpoint);
 
         /* ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ)*/
-        Eigen::Matrix<double, 1, 3> part_1 = (pp*world_coordinate_derivative_matrix);
+        Eigen::Matrix<double, 1, 3> jacobian_matrix = (gradient_of_scan_world_coordinates*gradient_of_map);
 
-        /* [1 − M(S_i(ξ))] */
-        double part_2 = 1 - M_P(scan_world_cordinate(0),scan_world_cordinate(1));
-        // part_2  = (part_2>=0.9)? 0.9 : part_2;
-        // part_2  = (part_2<=0.1)? 0.1 : part_2;
-
-        auto kk = part_1.transpose();
-
-        /* ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * [1 − M(S_i(ξ))]*/
-        Eigen::Matrix<double, 3, 1> part_3 = kk* part_2;
-
-        /* summation */
-        auto g = part_1_1+part_3;
-        part_1_1 = g;
-
-        /* ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )*/
-        Eigen::Matrix<double, 3, 3>  part_4 = kk*part_1;
-
-        auto h = part_1_2+part_4;
-
-        part_1_2 = h;
+        // auto occupied_cell = find_occupied_cell_coordinates(0,0,scan_world_coordinates(0),scan_world_coordinates(1));
+        // sum_of_scaled_jacobian_matrixes +=jacobian_matrix.transpose()* (1 - M_P(occupied_cell.first,occupied_cell.second));
+        
+        /* sigma { ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * [1 − M(S_i(ξ))]} */
+        sum_of_scaled_jacobian_matrixes +=jacobian_matrix.transpose()* (1 - M_P(scan_world_coordinates(0),scan_world_coordinates(1)));
+        
+        /* sigma {( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )}*/
+        sum_of_hessian_matrixes  += jacobian_matrix.transpose()*jacobian_matrix;
 
     }
 
-    auto ll = part_1_2.inverse();
-
-    return (ll*part_1_1);
+    return (sum_of_hessian_matrixes.inverse()*sum_of_scaled_jacobian_matrixes);
 
 }
 
