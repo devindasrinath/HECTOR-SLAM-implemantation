@@ -74,93 +74,20 @@ int main() {
 
     auto generated_data = datasetGenerator.generateData(std::make_pair(0,0));
 
-    std::vector<std::pair<int, int>> detetcted_all_cells;
-    for(auto data :generated_data)
-    {
-        // if(data<0.1){
-        //     angle-=0.012466637417674065;
-        //     continue;
-        // }
-        occupancyGridMap._cells_detected.clear();
-        
-        auto y1 = data*cos(angle) + robot_pos.second;
-        auto x1 = data*sin(angle)+ robot_pos.first;
-        angle+=2*M_PI/360;
-        
-
-        occupancyGridMap._occupied_cell = occupancyGridMap.find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
-
-        occupancyGridMap.filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1,occupancyGridMap._cells_detected);
-
-        auto it = std::find(occupancyGridMap._cells_detected.begin(), occupancyGridMap._cells_detected.end(), occupancyGridMap._occupied_cell);
-
-        if (it == occupancyGridMap._cells_detected.end()) {
-            occupancyGridMap._cells_detected.push_back(occupancyGridMap._occupied_cell);
-        } 
-        occupancyGridMap.occupancy_grid_mapping();
-
-        // auto p_line = grid.draw_line(robot_pos.first,robot_pos.second,round(x1),round(y1));
-        auto p_line = grid.draw_line_without_grid(robot_pos.first*GRID_STEP_SIZE,robot_pos.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
-        
-        // lines.emplace_back(*p_line);
-        // lines.emplace_back(*(p_line+1U));
- 
-        detetcted_all_cells.insert(detetcted_all_cells.end(), occupancyGridMap._cells_detected.begin(), occupancyGridMap._cells_detected.end());
-    }
-
+    occupancyGridMap.runOccupancyGridMap(generated_data,robot_pos);
 
     generated_data = datasetGenerator.generateData(std::make_pair(5,5));
+
     angle = 0;
 
-std::vector<Eigen::Vector2d> scan_endpoints;
+    std::vector<Eigen::Vector2d> scan_endpoints;
 
     for(auto data :generated_data)
     {
-        // if(data<0.1){
-        //     angle-=0.012466637417674065;
-        //     continue;
-        // }
-        // cells_detected.clear();
-        
-        // auto y1 = data*cos(angle) + robot_pos1.second;
-        // auto x1 = data*sin(angle)+ robot_pos1.first;
-        
-        
-
-        // occupied_cell = find_occupied_cell_coordinates(robot_pos1.first,robot_pos1.second,x1,y1);
-
-        // filter_detect_cells(robot_pos1.first , robot_pos1.second, x1,y1,cells_detected);
-
-        // auto it = std::find(cells_detected.begin(), cells_detected.end(), occupied_cell);
-
-        // if (it == cells_detected.end()) {
-        //     cells_detected.push_back(occupied_cell);
-        // } 
-        // occupancy_grid_mapping();
-
-        // auto p_line = grid.draw_line(robot_pos.first,robot_pos.second,round(x1),round(y1));
-        // auto p_line = grid.draw_line_without_grid(robot_pos1.first*GRID_STEP_SIZE,robot_pos1.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
-        
-        // lines.emplace_back(*p_line);
-        // lines.emplace_back(*(p_line+1U));
- 
-        // detetcted_all_cells1.insert(detetcted_all_cells1.end(), cells_detected.begin(), cells_detected.end());
-
         scan_endpoints.emplace_back(Eigen::Vector2d(data*sin(angle),data*cos(angle)));
         angle+=2*M_PI/360;
     }
     
-
-    // std::vector<sf::RectangleShape*> cells_for_draw;
-    // for(auto cell:cells){
-    //     cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
-    //    // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
-    // }
-
-    // std::vector<sf::RectangleShape*> cells_for_draw1;
-    // for(auto cell:detetcted_all_cells){
-    //     cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
-    // }
     
     Eigen::Vector3d total_change_value ;
     total_change_value.setZero();

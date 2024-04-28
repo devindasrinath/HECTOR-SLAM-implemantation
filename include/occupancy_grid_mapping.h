@@ -13,6 +13,7 @@ class OccupancyGridMap{
         void occupancy_grid_mapping();
         std::pair<int,int> find_occupied_cell_coordinates(double x0, double y0, double x1, double y1);
         void filter_detect_cells(double x0,double y0,double x1,double y1,std::vector<std::pair<int,int>> &points);
+        void runOccupancyGridMap(std::vector<double> dataSet,std::pair<double,double> robot_pos);
         std::vector<std::pair<int,int>> _cells_detected;
         std::pair<int,int> _occupied_cell={};
 

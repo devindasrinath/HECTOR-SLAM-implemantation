@@ -153,3 +153,32 @@ std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x0, d
     return std::make_pair(xt,yt);
 }
 
+
+void OccupancyGridMap::runOccupancyGridMap(std::vector<double> dataSet,std::pair<double,double> robot_pos){
+    double angle = 0;
+    for(auto data :dataSet)
+    {
+        // if(data<0.1){
+        //     angle-=0.012466637417674065;
+        //     continue;
+        // }
+        _cells_detected.clear();
+        
+        auto y1 = data*cos(angle) + robot_pos.second;
+        auto x1 = data*sin(angle)+ robot_pos.first;
+        angle+=2*M_PI/dataSet.size();
+        
+
+        _occupied_cell = find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
+
+        filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1, _cells_detected);
+
+        auto it = std::find(_cells_detected.begin(), _cells_detected.end(), _occupied_cell);
+
+        if (it == _cells_detected.end()) {
+            _cells_detected.push_back(_occupied_cell);
+        } 
+        occupancy_grid_mapping();
+        
+    }
+}
