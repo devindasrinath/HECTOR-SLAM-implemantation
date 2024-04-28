@@ -3,6 +3,7 @@
 #include "occupancy_grid_mapping.h"
 #include "common.h"
 #include "grid_operations.h"
+#include "simulation.h"
 
 #define GRID_STEP_SIZE 10
 #define GRID_WIDTH 840
@@ -34,92 +35,7 @@ void init_cells(){
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-double solveQuadratic(double a, double b, double c) {
-    static int i = 0;
-
-    if(i>=360){
-        i = 0;
-    }
-    double discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) {
-     //   std::cout << "No real roots\n";
-    } else if (discriminant == 0) {
-        double root = -b / (2 * a);
-        return root;
-     //   std::cout << "One real root: " << root << "\n";
-    } else {
-        double root1 = (-b + sqrt(discriminant)) / (2 * a);
-        double root2 = (-b - sqrt(discriminant)) / (2 * a);
-        if(root1>0 && root2>0){
-            if(i<180){
-                return root1;
-            }
-            else{
-                return root2;
-            }
-        }
-        else if (root1>0){
-            return root1;
-        }
-        else if (root2>0){
-            return root2;
-        }
-        
-        
-      //  std::cout << "Two real roots: " << root1 << " and " << root2 << "\n";
-    }
-    i++;
-}
-
-
-double circle_inside_distance(std::pair<double,double> robot_pos,double beam_angle,double radius){
-
-    auto a =1;
-    auto b = 2 *(robot_pos.first * sin(beam_angle) + robot_pos.second * cos(beam_angle));
-    auto c = robot_pos.first*robot_pos.first + robot_pos.second*robot_pos.second - radius*radius;
-
-    return solveQuadratic(a,b,c);
-}
-
-
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 std::pair<int,int> robot_pos((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
-double distances[360]={};
-
-void get_data_0(){
-
-    // for (size_t i = 0; i < 360; i++)
-    // {
-    //     double f = (double)rand() / RAND_MAX;
-    //     distances[i]= 0.1 + f * (28 - 0.1);
-    // }
-    for (size_t i = 0; i < 360; i++)
-    {
-        distances[i]= 40;//circle
-        //std::cout<<distances[i]<<std::endl;
-    }
-}
-
-std::pair<int,int> robot_pos1((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
-void get_data_1(){
-    robot_pos1.first +=2;
-    robot_pos1.second +=2;
-    // for (size_t i = 0; i < 360; i++)
-    // {
-    //     double f = (double)rand() / RAND_MAX;
-    //     distances[i]= 0.1 + f * (28 - 0.1);
-    // }
-    for (size_t i = 0; i < 360; i++)
-    {
-        distances[i]= circle_inside_distance(std::make_pair(5,5),2*M_PI*i/360,40);//circle
-        
-    }
-}
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 
@@ -145,7 +61,6 @@ int main() {
    // sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
     GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, GRID_STEP_SIZE, std::make_pair(GRID_STEP_SIZE/2 ,GRID_STEP_SIZE/2),sf::Color(0,100,0) };
-
     Grid grid(grid_paramters);
 
     auto p_grid_vertice_array = grid.init_grid();
@@ -154,10 +69,13 @@ int main() {
     std::vector<sf::Vertex> lines;
     
     double angle = 0;
-    get_data_0();
+
+    DatasetGenerator datasetGenerator(360, 40);
+
+    auto generated_data = datasetGenerator.generateData(std::make_pair(0,0));
 
     std::vector<std::pair<int, int>> detetcted_all_cells;
-    for(auto data :distances)
+    for(auto data :generated_data)
     {
         // if(data<0.1){
         //     angle-=0.012466637417674065;
@@ -191,12 +109,12 @@ int main() {
     }
 
 
-     get_data_1();
-     angle = 0;
+    generated_data = datasetGenerator.generateData(std::make_pair(5,5));
+    angle = 0;
 
 std::vector<Eigen::Vector2d> scan_endpoints;
 
-    for(auto data :distances)
+    for(auto data :generated_data)
     {
         // if(data<0.1){
         //     angle-=0.012466637417674065;
@@ -204,8 +122,8 @@ std::vector<Eigen::Vector2d> scan_endpoints;
         // }
         // cells_detected.clear();
         
-        auto y1 = data*cos(angle) + robot_pos1.second;
-        auto x1 = data*sin(angle)+ robot_pos1.first;
+        // auto y1 = data*cos(angle) + robot_pos1.second;
+        // auto x1 = data*sin(angle)+ robot_pos1.first;
         
         
 
@@ -221,10 +139,10 @@ std::vector<Eigen::Vector2d> scan_endpoints;
         // occupancy_grid_mapping();
 
         // auto p_line = grid.draw_line(robot_pos.first,robot_pos.second,round(x1),round(y1));
-        auto p_line = grid.draw_line_without_grid(robot_pos1.first*GRID_STEP_SIZE,robot_pos1.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
+        // auto p_line = grid.draw_line_without_grid(robot_pos1.first*GRID_STEP_SIZE,robot_pos1.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
         
-        lines.emplace_back(*p_line);
-        lines.emplace_back(*(p_line+1U));
+        // lines.emplace_back(*p_line);
+        // lines.emplace_back(*(p_line+1U));
  
         // detetcted_all_cells1.insert(detetcted_all_cells1.end(), cells_detected.begin(), cells_detected.end());
 
@@ -233,16 +151,16 @@ std::vector<Eigen::Vector2d> scan_endpoints;
     }
     
 
-    std::vector<sf::RectangleShape*> cells_for_draw;
-    for(auto cell:cells){
-        cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
-       // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
-    }
+    // std::vector<sf::RectangleShape*> cells_for_draw;
+    // for(auto cell:cells){
+    //     cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
+    //    // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
+    // }
 
-    std::vector<sf::RectangleShape*> cells_for_draw1;
-    for(auto cell:detetcted_all_cells){
-        cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
-    }
+    // std::vector<sf::RectangleShape*> cells_for_draw1;
+    // for(auto cell:detetcted_all_cells){
+    //     cells_for_draw1.emplace_back(grid.draw_cell(cell.first,cell.second,sf::Color::Yellow));
+    // }
     
     Eigen::Vector3d total_change_value ;
     total_change_value.setZero();
