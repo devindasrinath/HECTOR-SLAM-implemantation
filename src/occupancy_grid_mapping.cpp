@@ -1,9 +1,27 @@
 #include "occupancy_grid_mapping.h"
 
-OccupancyGridMap::OccupancyGridMap(std::vector<Cell> *cells, SensorProbabilities sensorProbabilities):
- _p_cells(cells),_sensorProbabilities(sensorProbabilities) 
+OccupancyGridMap::OccupancyGridMap(SensorProbabilities sensorProbabilities, uint32_t width, uint32_t height):
+ _sensorProbabilities(sensorProbabilities) , _width(width),_height(height)
 {
+    init_cells();
+}
 
+void OccupancyGridMap::init_cells(){
+    _p_cells = new std::vector<Cell>(_width*_height);
+    for(size_t i=1; i<=_height; i++){
+        for(size_t j=1; j<=_width; j++){
+            auto index = (j-1) + (i-1)*_height;
+            (*_p_cells)[index].x = j;
+            (*_p_cells)[index].y = i;
+            (*_p_cells)[index].prob_occupied = _sensorProbabilities.PROB_PRIOR_N;
+            (*_p_cells)[index].log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+            (*_p_cells)[index].pre_log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+        }
+    }
+}
+
+std::vector<Cell>* OccupancyGridMap::get_cells(){
+    return _p_cells;
 }
 
 void OccupancyGridMap::occupancy_grid_mapping(){
@@ -154,9 +172,14 @@ std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x0, d
 }
 
 
-void OccupancyGridMap::runOccupancyGridMap(std::vector<double> dataSet,std::pair<double,double> robot_pos){
-    double angle = 0;
-    for(auto data :dataSet)
+void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,std::vector<double> angleDataSet,std::pair<double,double> robot_pos){
+    
+
+    if (distanceDataSet.size()!=angleDataSet.size()){
+        throw std::runtime_error("Data sets are not equal!");
+        return;
+    }
+    for(auto i=0;i<distanceDataSet.size();i++)
     {
         // if(data<0.1){
         //     angle-=0.012466637417674065;
@@ -164,10 +187,8 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> dataSet,std::pair
         // }
         _cells_detected.clear();
         
-        auto y1 = data*cos(angle) + robot_pos.second;
-        auto x1 = data*sin(angle)+ robot_pos.first;
-        angle+=2*M_PI/dataSet.size();
-        
+        auto y1 = distanceDataSet[i]*cos(angleDataSet[i]) + robot_pos.second;
+        auto x1 = distanceDataSet[i]*sin(angleDataSet[i])+ robot_pos.first;
 
         _occupied_cell = find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
 
@@ -179,6 +200,6 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> dataSet,std::pair
             _cells_detected.push_back(_occupied_cell);
         } 
         occupancy_grid_mapping();
-        
+
     }
 }

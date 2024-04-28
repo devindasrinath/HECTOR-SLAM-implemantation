@@ -48,13 +48,31 @@ double DatasetGenerator::circle_inside_distance(std::pair<double,double> robot_p
     return solveQuadratic(a,b,c);
 }
 
-std::vector<double> DatasetGenerator::generateData(std::pair<double,double> center){
+std::vector<double> DatasetGenerator::getDistanceData(){
+    
+    return distanceData;
+}
+
+std::vector<double> DatasetGenerator::getAngleData(){
+
+    return angleData;
+}
+
+void DatasetGenerator::generateData(std::pair<double,double> center){
+    
+    distanceData.clear();
+    angleData.clear();
+    
+    for (size_t i = 0; i < _num_data; i++)
+    {
+        distanceData.emplace_back(circle_inside_distance(center,2*M_PI*i/_num_data,radius));//circle distances
+        
+    }
 
     for (size_t i = 0; i < _num_data; i++)
     {
-        data[i]= circle_inside_distance(center,2*M_PI*i/_num_data,radius);//circle
+        angleData.emplace_back(2*M_PI*i/_num_data);//circle angles
         
     }
-    return data;
 }
 

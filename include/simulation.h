@@ -8,7 +8,8 @@
 
 class DatasetGenerator {
 private:
-    std::vector<double> data;
+    std::vector<double> distanceData;
+    std::vector<double> angleData;
     int _num_data;
     double radius;
 
@@ -17,8 +18,9 @@ private:
     double circle_inside_distance(std::pair<double, double> robot_pos, double beam_angle, double radius) ;
 
 public:
-    DatasetGenerator(int num_data, double radius) : _num_data(num_data), data(num_data), radius(radius) {}
+    DatasetGenerator(int num_data, double radius) : _num_data(num_data), radius(radius) {}
 
-    std::vector<double> generateData(std::pair<double, double> center);
-
+    std::vector<double> getDistanceData();
+    std::vector<double> getAngleData();
+    void generateData(std::pair<double,double> center);
 };

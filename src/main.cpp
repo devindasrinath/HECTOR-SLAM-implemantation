@@ -17,25 +17,8 @@
 
 
 
-Cell cells[NUM_CELLS]={};
-
-void init_cells(){
-
-    for(size_t i=1; i<=NUM_Y_CELLS; i++){
-        for(size_t j=1; j<=NUM_Y_CELLS; j++){
-            auto index = (j-1) + (i-1)*NUM_Y_CELLS;
-            cells[index].x = j;
-            cells[index].y = i;
-            cells[index].prob_occupied = PROB_PRIOR;
-            cells[index].log_odds_ratio = LOGS_ODDS_RATIO(PROB_PRIOR);
-            cells[index].pre_log_odds_ratio = LOGS_ODDS_RATIO(PROB_PRIOR);
-        }
-    }
-}
-
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-std::pair<int,int> robot_pos((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
+
 
 
 
@@ -51,62 +34,51 @@ double ranges[] = {0.0, 1.3990000486373901, 1.399999976158142, 1.401000022888183
 
 int main() {
 
-    init_cells();
 
-    std::vector<Cell> vec(cells, cells + NUM_CELLS);
-    SensorProbabilities sensor_probabilities = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
-
-    OccupancyGridMap occupancyGridMap(&vec,sensor_probabilities );
     // Create the window
    // sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, GRID_STEP_SIZE, std::make_pair(GRID_STEP_SIZE/2 ,GRID_STEP_SIZE/2),sf::Color(0,100,0) };
-    Grid grid(grid_paramters);
+    // GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, GRID_STEP_SIZE, std::make_pair(GRID_STEP_SIZE/2 ,GRID_STEP_SIZE/2),sf::Color(0,100,0) };
+    // Grid grid(grid_paramters);
 
-    auto p_grid_vertice_array = grid.init_grid();
-    auto p_grid_text = grid.init_texts();
+    // auto p_grid_vertice_array = grid.init_grid();
+    // auto p_grid_text = grid.init_texts();
 
-    std::vector<sf::Vertex> lines;
+    // std::vector<sf::Vertex> lines;
     
-    double angle = 0;
+    // double angle = 0;
 
     DatasetGenerator datasetGenerator(360, 40);
+    datasetGenerator.generateData(std::make_pair(0,0));
+    auto generated_distance_data = datasetGenerator.getDistanceData();
+    auto generated_angle_data = datasetGenerator.getAngleData();
 
-    auto generated_data = datasetGenerator.generateData(std::make_pair(0,0));
+    std::pair<int,int> robot_pos((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
 
-    occupancyGridMap.runOccupancyGridMap(generated_data,robot_pos);
+    OccupancyGridMap occupancyGridMap(SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE},NUM_X_CELLS,NUM_Y_CELLS );
 
-    generated_data = datasetGenerator.generateData(std::make_pair(5,5));
+    occupancyGridMap.runOccupancyGridMap(generated_distance_data,generated_angle_data,robot_pos);
 
-    angle = 0;
+    datasetGenerator.generateData(std::make_pair(5,5));
+    generated_distance_data = datasetGenerator.getDistanceData();
+    generated_angle_data = datasetGenerator.getAngleData();
 
-    std::vector<Eigen::Vector2d> scan_endpoints;
+    auto point_cloud =  scan_data_to_point_cloud(generated_distance_data ,generated_angle_data);
 
-    for(auto data :generated_data)
-    {
-        scan_endpoints.emplace_back(Eigen::Vector2d(data*sin(angle),data*cos(angle)));
-        angle+=2*M_PI/360;
-    }
-    
-    
-    Eigen::Vector3d total_change_value ;
-    total_change_value.setZero();
-
+    Eigen::Vector3d total_change_value = Eigen::Matrix<double, 3, 1>::Zero();
     Eigen::Vector3d robot_pose_old(robot_pos.first ,robot_pos.second,0);
 
-// std::vector<Cell> vec(cells, cells + NUM_CELLS);
-// SensorProbabilities sensor_probabilities = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+    HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} );
 
-HectorSLAM hector_slam(&vec,sensor_probabilities );
-for(auto i=0;i<100;i++)
-{
-    auto change_value = hector_slam.hector_slam(robot_pose_old , scan_endpoints);
-    total_change_value+=change_value;
-    robot_pose_old += change_value;
+    for(auto i=0;i<100;i++)
+    {
+        auto change_value = hector_slam.hector_slam(robot_pose_old , point_cloud);
+        total_change_value+=change_value;
+        robot_pose_old += change_value;
 
-    std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
-    std::cout<<"new_pos : " <<robot_pose_old.transpose()<<std::endl;
-}
+        std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
+        std::cout<<"new_pos : " <<robot_pose_old.transpose()<<std::endl;
+    }
 
     // Run the main loop
     // while (window.isOpen()) {
