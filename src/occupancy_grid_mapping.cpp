@@ -179,7 +179,7 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
         throw std::runtime_error("Data sets are not equal!");
         return;
     }
-    for(auto i=0;i<distanceDataSet.size();i++)
+    for(size_t i=0;i<distanceDataSet.size();i++)
     {
         // if(data<0.1){
         //     angle-=0.012466637417674065;

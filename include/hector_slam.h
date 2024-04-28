@@ -27,11 +27,13 @@ class HectorSLAM {
 
 public:
     HectorSLAM(std::vector<Cell> *cells,SensorProbabilities sensorProbabilities);
-    Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
+    Eigen::Vector3d runLocalization(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
+    Eigen::Vector3d runLocalizationLoop(Eigen::Vector3d robot_pos_old, std::vector<Eigen::Vector2d> point_cloud, size_t num_iterations);
 
 private:
     Eigen::Matrix<double,2, 3> D_map(double robot_angle ,Eigen::Vector2d scan_point);
     Eigen::Vector2d get_world_coordinates(Eigen::Vector3d robot_pos ,Eigen::Vector2d scan_point);
+    
     double D_Y(double x,double y);
     double D_X(double x,double y);
     double M_P(double x,double y);

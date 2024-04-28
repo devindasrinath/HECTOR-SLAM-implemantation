@@ -19,7 +19,7 @@ std::vector<Eigen::Vector2d> scan_data_to_point_cloud(std::vector<double> genera
 
     std::vector<Eigen::Vector2d> point_cloud;
 
-    for(auto i = 0;i<generated_distance_data.size();i++)
+    for(size_t i = 0;i<generated_distance_data.size();i++)
     {
         point_cloud.emplace_back(Eigen::Vector2d(generated_distance_data[i]*sin(generated_angle_data[i]),generated_distance_data[i]*cos(generated_angle_data[i])));
 

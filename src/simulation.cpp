@@ -3,7 +3,7 @@
 
 
 double DatasetGenerator::solveQuadratic(double a, double b, double c) {
-    static int i = 0;
+    static size_t i = 0;
 
     if(i>=_num_data){
         i = 0;
@@ -36,6 +36,7 @@ double DatasetGenerator::solveQuadratic(double a, double b, double c) {
     
     }
     i++;
+    return 0;
 }
 
 

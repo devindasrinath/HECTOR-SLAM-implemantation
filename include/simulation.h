@@ -10,7 +10,7 @@ class DatasetGenerator {
 private:
     std::vector<double> distanceData;
     std::vector<double> angleData;
-    int _num_data;
+    size_t _num_data;
     double radius;
 
     double solveQuadratic(double a, double b, double c) ;

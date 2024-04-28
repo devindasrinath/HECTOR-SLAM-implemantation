@@ -59,26 +59,17 @@ int main() {
 
     occupancyGridMap.runOccupancyGridMap(generated_distance_data,generated_angle_data,robot_pos);
 
-    datasetGenerator.generateData(std::make_pair(0.7,3));
+    datasetGenerator.generateData(std::make_pair(5,5));
     generated_distance_data = datasetGenerator.getDistanceData();
     generated_angle_data = datasetGenerator.getAngleData();
 
     auto point_cloud =  scan_data_to_point_cloud(generated_distance_data ,generated_angle_data);
 
-    Eigen::Vector3d total_change_value = Eigen::Matrix<double, 3, 1>::Zero();
     Eigen::Vector3d robot_pose_old(robot_pos.first ,robot_pos.second,0);
 
     HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} );
 
-    for(auto i=0;i<100;i++)
-    {
-        auto change_value = hector_slam.hector_slam(robot_pose_old , point_cloud);
-        total_change_value+=change_value;
-        robot_pose_old += change_value;
-
-        std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
-        std::cout<<"new_pos : " <<robot_pose_old.transpose()<<std::endl;
-    }
+    hector_slam.runLocalizationLoop(robot_pose_old,point_cloud,100);
 
     // Run the main loop
     // while (window.isOpen()) {

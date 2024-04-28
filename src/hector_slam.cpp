@@ -24,7 +24,7 @@ bool HectorSLAM::isInteger(double value) {
 */
 int HectorSLAM::findCellIndexByXAndY(int x, int y) {
   
-    for (auto cell_index = 0; cell_index<_p_cells->size(); cell_index++) {
+    for (size_t cell_index = 0; cell_index<_p_cells->size(); cell_index++) {
         if (((*_p_cells)[cell_index].x == x) && ((*_p_cells)[cell_index].y == y)) {
             return cell_index;
         }
@@ -183,7 +183,7 @@ Eigen::Matrix<double,2, 3> HectorSLAM::D_map(double robot_angle ,Eigen::Vector2d
 /*
 * HECTOR SLAM algorithm for calculate mosts probable deviation from the previous point
 */
-Eigen::Vector3d HectorSLAM::hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints){
+Eigen::Vector3d HectorSLAM::runLocalization(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints){
 
     Eigen::Matrix<double, 3, 1> sum_of_scaled_jacobian_matrixes = Eigen::Matrix<double, 3, 1>::Zero();
 
@@ -218,4 +218,21 @@ Eigen::Vector3d HectorSLAM::hector_slam(Eigen::Vector3d robot_pos , std::vector<
 
 }
 
+Eigen::Vector3d HectorSLAM::runLocalizationLoop(Eigen::Vector3d robot_pos_old, std::vector<Eigen::Vector2d> point_cloud, size_t num_iterations){
+    
+    Eigen::Vector3d total_change_value = Eigen::Matrix<double, 3, 1>::Zero();
+    Eigen::Vector3d robot_pos(robot_pos_old);
 
+   for(size_t i=0;i<num_iterations;i++)
+    {
+        auto change_value = runLocalization(robot_pos, point_cloud);
+        total_change_value+=change_value;
+        robot_pos += change_value;
+
+        std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
+        std::cout<<"new_pos : " <<robot_pos.transpose()<<std::endl;
+    }
+
+    return robot_pos;
+
+}
