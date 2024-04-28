@@ -1,137 +1,20 @@
 #include "main.h"
 #include "hector_slam.h"
+#include "occupancy_grid_mapping.h"
+#include "common.h"
+#include "grid_operations.h"
 
 #define GRID_STEP_SIZE 10
 #define GRID_WIDTH 840
 #define GRID_HEIGTH 840
 
-class Grid{
-
-    public :
-
-        Grid(GridParameters &grid_parameters) :
-        _grid_parameters(grid_parameters) {
-        }
-
-
-        std::vector<sf::Vertex>* init_grid()
-        {
-            /* vertical grid lines*/
-            for(size_t i = 0; i<_grid_parameters.grid_width; i+=_grid_parameters.step_size){
-                if(i == _grid_parameters.origin.second ){
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(i, 0), sf::Color::Red));
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(i, _grid_parameters.grid_height), sf::Color::Red));
-                }
-                else{
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(i, 0), _grid_parameters.grid_color));
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(i, _grid_parameters.grid_height), _grid_parameters.grid_color));
-                }
-            }
-
-            /* horizontal grid lines*/
-            for(size_t i = 0; i<_grid_parameters.grid_height; i+=_grid_parameters.step_size){
-                if(i == _grid_parameters.origin.first ){
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(0, i), sf::Color::Red));
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(_grid_parameters.grid_width, i), sf::Color::Red));
-                }
-                else{
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(0, i), _grid_parameters.grid_color));
-                    _vertice_array.push_back(sf::Vertex(sf::Vector2f(_grid_parameters.grid_width, i), _grid_parameters.grid_color));
-                }
-            }
-        
-            return &_vertice_array;
-
-        }
-
-        sf::Text* init_texts(){
-            
-            _font.loadFromFile("./fonts/open-sans/OpenSans-Bold.ttf");
-
-            _origin_text.setString(std::string("0,0"));
-            _origin_text.setPosition(_grid_parameters.origin.first,_grid_parameters.grid_height-_grid_parameters.origin.second );
-            _origin_text.setOrigin(0,0);
-            _origin_text.setFont(_font);
-            _origin_text.setColor(sf::Color::White);
-            _origin_text.setCharacterSize(12);
-
-            return &_origin_text;
-        }
-
-        sf::RectangleShape* draw_cell(size_t x, size_t y,sf::Color color = sf::Color::Yellow){
-            auto p_rectangle_shape = new sf::RectangleShape; 
-            _cell_vector.x = (float) _grid_parameters.step_size;
-            _cell_vector.y = (float) _grid_parameters.step_size;
-            _cell_position.x =  ((x-0.5)*_grid_parameters.step_size) + _grid_parameters.origin.first;
-            _cell_position.y = _grid_parameters.grid_height - ((y+0.5)*_grid_parameters.step_size) - _grid_parameters.origin.second;
-            p_rectangle_shape->setFillColor(color);
-            p_rectangle_shape->setSize(_cell_vector);
-            p_rectangle_shape->setPosition(_cell_position);
-
-            return p_rectangle_shape;
-
-        }
-
-
-        sf::Vertex* draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2)
-        {
-
-            _line_points[0] = sf::Vertex(sf::Vector2f((x1*_grid_parameters.step_size) + _grid_parameters.origin.first
-             , _grid_parameters.grid_height - (y1*_grid_parameters.step_size) - _grid_parameters.origin.second));
-            _line_points[0].color = sf::Color::Blue;
-
-            _line_points[1] = sf::Vertex(sf::Vector2f((x2*_grid_parameters.step_size) + _grid_parameters.origin.first
-             , _grid_parameters.grid_height - (y2*_grid_parameters.step_size) - _grid_parameters.origin.second));
-            _line_points[1].color = sf::Color::Blue;
-        
-            return _line_points;
-        }
-        
-        sf::Vertex* draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2)
-        {
-
-            _line_points[0] = sf::Vertex(sf::Vector2f(x1 + _grid_parameters.origin.first
-             , _grid_parameters.grid_height - y1 - _grid_parameters.origin.second));
-            _line_points[0].color = sf::Color::Blue;
-
-            _line_points[1] = sf::Vertex(sf::Vector2f(x2 + _grid_parameters.origin.first
-             , _grid_parameters.grid_height - y2 - _grid_parameters.origin.second));
-            _line_points[1].color = sf::Color::Blue;
-        
-            return _line_points;
-        }
-
-
-    private:
-        GridParameters _grid_parameters;
-        std::vector<sf::Vertex> _vertice_array;
-        sf::Text _origin_text;
-        sf::Font _font;
-        sf::Vector2f _cell_vector;
-        sf::Vector2f _cell_position;
-        sf::Vertex _line_points[2];
-        
-};
-
 
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-double LOGS_ODDS_RATIO(double x)  {
-    return log(x/(1 - x));
-}
-
-double PROB(double x)  {
-    return 1/(1+(1/std::pow(10, x)));
-}
-
-double POINT_DIS_SQ(double x0,double y0,double x1,double y1) {
-    return std::pow(y1-y0 ,2) + std::pow(x1-x0 ,2) ;
-}
 
 
 
-std::vector<std::pair<int,int>> cells_detected;
-std::pair<int,int> occupied_cell={};
+
 
 Cell cells[NUM_CELLS]={};
 
@@ -148,172 +31,6 @@ void init_cells(){
         }
     }
 }
-
-
-void occupancy_grid_mapping(){
-    for(auto &cell:cells){
-        auto it  = std::find(cells_detected.begin(), cells_detected.end(), std::make_pair(cell.x,cell.y));
-        if(it != cells_detected.end()){
-
-            if((cell.x == occupied_cell.first) && (cell.y == occupied_cell.second)){
-                /* CASE 1 : cell occupied*/
-                cell.log_odds_ratio = LOGS_ODDS_RATIO(PROB_OCCUPIED) + cell.pre_log_odds_ratio - LOGS_ODDS_RATIO(PROB_PRIOR);
-                //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"occupied , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
-                
-            }
-            else{
-                /* CASE 2 : cell FREE*/
-                cell.log_odds_ratio = LOGS_ODDS_RATIO(PROB_FREE) + cell.pre_log_odds_ratio - LOGS_ODDS_RATIO(PROB_PRIOR);
-                //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"free , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
-            }
-            
-        }
-        else{
-            /* CASE 3 : cell uknown*/
-            cell.log_odds_ratio = cell.pre_log_odds_ratio;
-           // std::cout<<cell.x<<" , " <<cell.y<< " , "<<"dont know , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
-
-           // std::cout<<"came to unknown cell"<<std::endl;;
-        }
-    
-        
-        cell.prob_occupied = PROB(cell.log_odds_ratio);
-
-        // if(came)
-        //     std::cout<<cell.x<<" , " <<cell.y<< " , "<<"occupied , "<<cell.log_odds_ratio<<" , "<<cell.prob_occupied<< " , "<<cell.pre_log_odds_ratio<<std::endl;
-
-        cell.pre_log_odds_ratio = cell.log_odds_ratio;
-        
-    }
-}
-
-void filter_detect_cells(double x0,double y0,double x1,double y1,std::vector<std::pair<int,int>> &points){
-    plotLine(x0, y0, x1, y1, points);
-    size_t max_dis=0;
-    // occupied_cell.first = 0;
-    // occupied_cell.second = 0;
-    // for(auto point:points){
-    //     auto point_dis = POINT_DIS_SQ(x0,y0,point.first,point.second);
-    //     if (max_dis <=point_dis ){
-    //         max_dis = point_dis;
-    //         occupied_cell.first = point.first;
-    //         occupied_cell.second = point.second;
-    //     }
-    // }
-}
-
-
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-std::vector<std::pair<double,double>> points_float;
-void plotLineLow(double x0, double y0, double x1_1, double y1_1, std::vector<std::pair<int,int>> &points,bool invert = false) {
-    double x1,y1=0;
-    if(invert){
-        y1 = y1_1;
-        x1 = x0 + abs(abs(x0) - abs(x1_1));
-    }
-    else{
-        x1 = x1_1;
-        y1 = y1_1;
-    }
-
-    double dx = x1 - x0;
-    double dy = y1 - y0;
-    int yi = 1;
-    if (dy < 0) {
-        yi = -1;
-        dy = -dy;
-    }
-    double D = (2 * dy) - dx;
-    double y = y0;
-
-    for (double x = x0; x < x1; x+=1) {
-        if(invert){
-            points.emplace_back(std::make_pair(round(x0 - (abs(x-x0))),round(y)));
-            points_float.emplace_back(std::make_pair(x0 - (abs(x-x0)),y));
-        }
-        else{
-            points.emplace_back(std::make_pair(round(x),round(y)));
-            points_float.emplace_back(std::make_pair(x,y));
-        }
-        if (D > 0) {
-            y = y + yi;
-            D = D + (2 * (dy - dx));
-        } else {
-            D = D + 2 * dy;
-        }
-    }
-}
-
-void plotLineHigh(double x0, double y0, double x1_1, double y1_1, std::vector<std::pair<int,int>> &points,bool invert = false) {
-
-double x1,y1=0;
-    if(invert){
-        x1 = x1_1;
-        y1 = y0 + abs(abs(y0) - abs(y1_1));
-    }
-    else{
-        x1 = x1_1;
-        y1 = y1_1;
-    }
-    double dx = x1 - x0;
-    double dy = y1 - y0;
-    double xi = 1;
-    if (dx < 0) {
-        xi = -1;
-        dx = -dx;
-    }
-    double D = (2 * dx) - dy;
-    double x = x0;
-
-    for (double y = y0; y <= y1; y+=1) {
-        if(invert){
-            points.emplace_back(std::make_pair(round(x),round(y0 - (abs(y-y0)))));
-            points_float.emplace_back(std::make_pair(x,y0 - (abs(y-y0))));
-        }
-        else{
-            points.emplace_back(std::make_pair(round(x),round(y)));
-            points_float.emplace_back(std::make_pair(x,y));
-        }
-        if (D > 0) {
-            x = x + xi;
-            D = D + (2 * (dx - dy));
-        } else {
-            D = D + 2 * dx;
-        }
-    }
-}
-
-void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points) {
-    if (std::abs(y1 - y0) < std::abs(x1 - x0)) {
-        if (x0 > x1) {
-            plotLineLow(x0, y0, x1, y1, points,true);
-        } else {
-            plotLineLow(x0, y0, x1, y1, points);
-        }
-    } else {
-        if (y0 > y1) {
-            plotLineHigh(x0, y0, x1, y1, points,true);
-        } else {
-            plotLineHigh(x0, y0, x1, y1, points);
-        }
-    }
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-int get_sign(double x){
-    return int(x/abs(x));
-}
-
-std::pair<int,int> find_occupied_cell_coordinates(double x0, double y0, double x1, double y1){
-
-    int xt,yt=0;
-
-    yt = get_sign(y1-y0)*round(abs(y1-y0)) + y0;
-    xt = get_sign(x1-x0)*round(abs(x1-x0)) + x0;
-    return std::make_pair(xt,yt);
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -397,7 +114,7 @@ void get_data_1(){
     // }
     for (size_t i = 0; i < 360; i++)
     {
-        distances[i]= circle_inside_distance(std::make_pair(10,10),2*M_PI*i/360,40);//circle
+        distances[i]= circle_inside_distance(std::make_pair(5,5),2*M_PI*i/360,40);//circle
         
     }
 }
@@ -417,6 +134,13 @@ double ranges[] = {0.0, 1.3990000486373901, 1.399999976158142, 1.401000022888183
 
 
 int main() {
+
+    init_cells();
+
+    std::vector<Cell> vec(cells, cells + NUM_CELLS);
+    SensorProbabilities sensor_probabilities = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+
+    OccupancyGridMap occupancyGridMap(&vec,sensor_probabilities );
     // Create the window
    // sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
@@ -428,7 +152,7 @@ int main() {
     auto p_grid_text = grid.init_texts();
 
     std::vector<sf::Vertex> lines;
-    init_cells();
+    
     double angle = 0;
     get_data_0();
 
@@ -439,23 +163,23 @@ int main() {
         //     angle-=0.012466637417674065;
         //     continue;
         // }
-        cells_detected.clear();
+        occupancyGridMap._cells_detected.clear();
         
         auto y1 = data*cos(angle) + robot_pos.second;
         auto x1 = data*sin(angle)+ robot_pos.first;
         angle+=2*M_PI/360;
         
 
-        occupied_cell = find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
+        occupancyGridMap._occupied_cell = occupancyGridMap.find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
 
-        filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1,cells_detected);
+        occupancyGridMap.filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1,occupancyGridMap._cells_detected);
 
-        auto it = std::find(cells_detected.begin(), cells_detected.end(), occupied_cell);
+        auto it = std::find(occupancyGridMap._cells_detected.begin(), occupancyGridMap._cells_detected.end(), occupancyGridMap._occupied_cell);
 
-        if (it == cells_detected.end()) {
-            cells_detected.push_back(occupied_cell);
+        if (it == occupancyGridMap._cells_detected.end()) {
+            occupancyGridMap._cells_detected.push_back(occupancyGridMap._occupied_cell);
         } 
-        occupancy_grid_mapping();
+        occupancyGridMap.occupancy_grid_mapping();
 
         // auto p_line = grid.draw_line(robot_pos.first,robot_pos.second,round(x1),round(y1));
         auto p_line = grid.draw_line_without_grid(robot_pos.first*GRID_STEP_SIZE,robot_pos.second*GRID_STEP_SIZE,round(x1*GRID_STEP_SIZE),round(y1*GRID_STEP_SIZE));
@@ -463,7 +187,7 @@ int main() {
         // lines.emplace_back(*p_line);
         // lines.emplace_back(*(p_line+1U));
  
-        detetcted_all_cells.insert(detetcted_all_cells.end(), cells_detected.begin(), cells_detected.end());
+        detetcted_all_cells.insert(detetcted_all_cells.end(), occupancyGridMap._cells_detected.begin(), occupancyGridMap._cells_detected.end());
     }
 
 
@@ -525,8 +249,8 @@ std::vector<Eigen::Vector2d> scan_endpoints;
 
     Eigen::Vector3d robot_pose_old(robot_pos.first ,robot_pos.second,0);
 
-std::vector<Cell> vec(cells, cells + NUM_CELLS);
-SensorProbabilities sensor_probabilities = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+// std::vector<Cell> vec(cells, cells + NUM_CELLS);
+// SensorProbabilities sensor_probabilities = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
 
 HectorSLAM hector_slam(&vec,sensor_probabilities );
 for(auto i=0;i<100;i++)

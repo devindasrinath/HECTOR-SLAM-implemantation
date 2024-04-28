@@ -17,17 +17,5 @@
 #define NO_CELL -1
 
 
-struct GridParameters{
-    size_t grid_height;
-    size_t grid_width;
-    size_t step_size;
-    std::pair<size_t,size_t> origin;
-    sf::Color grid_color;
-
-};
-
-
-
-
 void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points);
 Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
