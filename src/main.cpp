@@ -59,7 +59,7 @@ int main() {
 
     occupancyGridMap.runOccupancyGridMap(generated_distance_data,generated_angle_data,robot_pos);
 
-    datasetGenerator.generateData(std::make_pair(5,5));
+    datasetGenerator.generateData(std::make_pair(0.7,3));
     generated_distance_data = datasetGenerator.getDistanceData();
     generated_angle_data = datasetGenerator.getAngleData();
 

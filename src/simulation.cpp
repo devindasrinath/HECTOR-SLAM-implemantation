@@ -69,9 +69,11 @@ void DatasetGenerator::generateData(std::pair<double,double> center){
         
     }
 
+    double angle =0;
     for (size_t i = 0; i < _num_data; i++)
     {
-        angleData.emplace_back(2*M_PI*i/_num_data);//circle angles
+        angleData.emplace_back(angle);//circle angles
+        angle+=2*M_PI/360;
         
     }
 }
