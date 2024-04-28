@@ -22,5 +22,5 @@ public:
 
     std::vector<double> getDistanceData();
     std::vector<double> getAngleData();
-    void generateData(std::pair<double,double> center);
+    void generateData(std::pair<double,double> center,double angle_deg);
 };

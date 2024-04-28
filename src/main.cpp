@@ -5,7 +5,7 @@
 #include "grid_operations.h"
 #include "simulation.h"
 
-#define GRID_STEP_SIZE 10
+
 #define GRID_WIDTH 840
 #define GRID_HEIGTH 840
 
@@ -36,40 +36,88 @@ int main() {
 
 
     // Create the window
-   // sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
+//    sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-    // GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, GRID_STEP_SIZE, std::make_pair(GRID_STEP_SIZE/2 ,GRID_STEP_SIZE/2),sf::Color(0,100,0) };
-    // Grid grid(grid_paramters);
+//     GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 10, std::make_pair(10/2 ,10/2),sf::Color(0,100,0) };
+//     Grid grid(grid_paramters);
 
-    // auto p_grid_vertice_array = grid.init_grid();
-    // auto p_grid_text = grid.init_texts();
+//     auto p_grid_vertice_array = grid.init_grid();
+//     auto p_grid_text = grid.init_texts();
 
-    // std::vector<sf::Vertex> lines;
+//     std::vector<sf::Vertex> lines;
+
+/********************************************************** grid 1 ******************************************************/
+size_t GRID_STEP_SIZE;
+
+uint8_t grid_step_sizes[]={20,10,5};
+
+auto pre_robot_pos_x = (GRID_WIDTH/2)/5;
+auto pre_robot_pos_y = (GRID_HEIGTH/2)/5;
+auto pre_robot_pos_theta = 0;
+Eigen::Vector3d pre_robot_pos(pre_robot_pos_x,pre_robot_pos_y,pre_robot_pos_theta);
+
+Eigen::Vector3d current_robot_pos((pre_robot_pos(0))/4,(pre_robot_pos(1))/4,0);
+
+DatasetGenerator datasetGenerator(360, 60);
+datasetGenerator.generateData(std::make_pair(0,0),0);
+auto generated_distance_data_0 = datasetGenerator.getDistanceData();
+auto generated_angle_data_0 = datasetGenerator.getAngleData();
+
+datasetGenerator.generateData(std::make_pair(1,0),210);
+auto generated_distance_data_1 = datasetGenerator.getDistanceData();
+auto generated_angle_data_1 = datasetGenerator.getAngleData();
+
+for(auto step_size : grid_step_sizes){
+
+    GRID_STEP_SIZE = step_size;
+
+    /* Scaling the previous dataset*/
+    auto  scalar =  (grid_step_sizes[2])/(double (step_size));
+    std::vector<double> generated_distance_data_0_scaled;
+    for (double data : generated_distance_data_0) {
+        generated_distance_data_0_scaled.emplace_back(data*scalar);
+    }
     
-    // double angle = 0;
+    /* Scaling the previous robot position*/
+    Eigen::Vector3d pre_robot_pos_scaled;
+    pre_robot_pos_scaled(0) = pre_robot_pos(0)*scalar;
+    pre_robot_pos_scaled(1) = pre_robot_pos(1)*scalar;
+    pre_robot_pos_scaled(2) = pre_robot_pos(2);
 
-    DatasetGenerator datasetGenerator(360, 40);
-    datasetGenerator.generateData(std::make_pair(0,0));
-    auto generated_distance_data = datasetGenerator.getDistanceData();
-    auto generated_angle_data = datasetGenerator.getAngleData();
+    /* Scaling the current dataset*/
+    std::vector<double> generated_distance_data_1_scaled;
+    for (double data : generated_distance_data_1) {
+        generated_distance_data_1_scaled.emplace_back(data*scalar);
+    }
 
-    std::pair<int,int> robot_pos((GRID_WIDTH/2)/GRID_STEP_SIZE,(GRID_HEIGTH/2)/GRID_STEP_SIZE);
 
-    OccupancyGridMap occupancyGridMap(SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE},NUM_X_CELLS,NUM_Y_CELLS );
+    {   
+        /* initial mapping*/
+        OccupancyGridMap occupancyGridMap(SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE},NUM_X_CELLS,NUM_Y_CELLS );
+        occupancyGridMap.runOccupancyGridMap(generated_distance_data_0_scaled,generated_angle_data_0,pre_robot_pos_scaled);
 
-    occupancyGridMap.runOccupancyGridMap(generated_distance_data,generated_angle_data,robot_pos);
+        /* generate point cloud*/
+        auto point_cloud =  scan_data_to_point_cloud(generated_distance_data_1_scaled ,generated_angle_data_1);
 
-    datasetGenerator.generateData(std::make_pair(5,5));
-    generated_distance_data = datasetGenerator.getDistanceData();
-    generated_angle_data = datasetGenerator.getAngleData();
+        /* run localization*/
+        HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} );
+        current_robot_pos = hector_slam.runLocalizationLoop(current_robot_pos,point_cloud,100);
 
-    auto point_cloud =  scan_data_to_point_cloud(generated_distance_data ,generated_angle_data);
+    }
 
-    Eigen::Vector3d robot_pose_old(robot_pos.first ,robot_pos.second,0);
+    if(step_size!=grid_step_sizes[2]){
+        /* Scaling the current robot position*/
+        current_robot_pos(0)= current_robot_pos(0)*2.0;
+        current_robot_pos(1) = current_robot_pos(1)*2.0;
+    }
 
-    HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} );
 
-    hector_slam.runLocalizationLoop(robot_pose_old,point_cloud,100);
+}
+
+
+
+
+    
 
     // Run the main loop
     // while (window.isOpen()) {
@@ -84,13 +132,13 @@ int main() {
     //     window.clear(sf::Color::Black);
 
         
-    //     window.draw(*p_grid_text);
-    //     for(auto cell:cells_for_draw1){
-    //         window.draw(*cell);
-    //     }
-    //     for(auto cell:cells_for_draw){
-    //         window.draw(*cell);
-    //     }
+    //     // window.draw(*p_grid_text);
+    //     // for(auto cell:cells_for_draw1){
+    //     //     window.draw(*cell);
+    //     // }
+    //     // for(auto cell:cells_for_draw){
+    //     //     window.draw(*cell);
+    //     // }
     //     window.draw(&lines[0],720,sf::Lines);
     //     window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
     //     // Display the content of the window

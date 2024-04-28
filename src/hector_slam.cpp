@@ -150,8 +150,8 @@ Eigen::Vector2d HectorSLAM::get_world_coordinates(Eigen::Vector3d robot_pos ,Eig
     double sin_theta = std::sin(robot_pos(2));
 
     rot_matrix(0,0) = cos_theta;
-    rot_matrix(0,1) = -sin_theta;
-    rot_matrix(1,0) = sin_theta;
+    rot_matrix(0,1) = sin_theta;
+    rot_matrix(1,0) = -sin_theta;
     rot_matrix(1,1) = cos_theta;
 
     /* coord = Rotational_matrix * scan_endpoint + robot_pos*/
@@ -171,10 +171,10 @@ Eigen::Matrix<double,2, 3> HectorSLAM::D_map(double robot_angle ,Eigen::Vector2d
 
     world_coordinate_derivative_matrix(0,0) = 1;
     world_coordinate_derivative_matrix(0,1) = 0;
-    world_coordinate_derivative_matrix(0,2) = (-sin_theta*scan_point(0)-cos_theta*scan_point(1));
+    world_coordinate_derivative_matrix(0,2) = (-sin_theta*scan_point(0)+cos_theta*scan_point(1));
     world_coordinate_derivative_matrix(1,0) = 0;
     world_coordinate_derivative_matrix(1,1) = 1;
-    world_coordinate_derivative_matrix(1,2) = (cos_theta*scan_point(0)-sin_theta*scan_point(1));
+    world_coordinate_derivative_matrix(1,2) = (-cos_theta*scan_point(0)-sin_theta*scan_point(1));
 
     return world_coordinate_derivative_matrix;
 
@@ -230,7 +230,9 @@ Eigen::Vector3d HectorSLAM::runLocalizationLoop(Eigen::Vector3d robot_pos_old, s
         robot_pos += change_value;
 
         std::cout<<"\nchange_value : " <<total_change_value.transpose()<<std::endl;
-        std::cout<<"new_pos : " <<robot_pos.transpose()<<std::endl;
+        
+        Eigen::Vector3d new_pos_deg(robot_pos(0),robot_pos(1),robot_pos(2)*360/(2*M_PI));
+        std::cout<<"new_pos : " <<new_pos_deg.transpose()<<std::endl;
     }
 
     return robot_pos;

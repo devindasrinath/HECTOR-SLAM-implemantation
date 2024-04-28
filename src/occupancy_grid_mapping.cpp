@@ -160,7 +160,6 @@ void OccupancyGridMap::plotLine(double x0, double y0, double x1, double y1, std:
     }
 }
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x0, double y0, double x1, double y1){
 
@@ -172,7 +171,7 @@ std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x0, d
 }
 
 
-void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,std::vector<double> angleDataSet,std::pair<double,double> robot_pos){
+void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,std::vector<double> angleDataSet,Eigen::Vector3d robot_pos){
     
 
     if (distanceDataSet.size()!=angleDataSet.size()){
@@ -187,12 +186,15 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
         // }
         _cells_detected.clear();
         
-        auto y1 = distanceDataSet[i]*cos(angleDataSet[i]) + robot_pos.second;
-        auto x1 = distanceDataSet[i]*sin(angleDataSet[i])+ robot_pos.first;
+        auto x1_r = distanceDataSet[i]*sin(angleDataSet[i]);
+        auto y1_r = distanceDataSet[i]*cos(angleDataSet[i]);
 
-        _occupied_cell = find_occupied_cell_coordinates(robot_pos.first,robot_pos.second,x1,y1);
+        auto x1_g = (sin(robot_pos(2))*y1_r) +  (cos(robot_pos(2))*x1_r) + robot_pos(0);
+        auto y1_g = (-sin(robot_pos(2))*x1_r) +  (cos(robot_pos(2))*y1_r) + robot_pos(1);
+        
+        _occupied_cell = find_occupied_cell_coordinates(robot_pos(0),robot_pos(1),x1_g,y1_g);
 
-        filter_detect_cells(robot_pos.first , robot_pos.second, x1,y1, _cells_detected);
+        filter_detect_cells(robot_pos(0) , robot_pos(0), x1_g,y1_g, _cells_detected);
 
         auto it = std::find(_cells_detected.begin(), _cells_detected.end(), _occupied_cell);
 

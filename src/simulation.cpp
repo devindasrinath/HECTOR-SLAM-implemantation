@@ -59,22 +59,24 @@ std::vector<double> DatasetGenerator::getAngleData(){
     return angleData;
 }
 
-void DatasetGenerator::generateData(std::pair<double,double> center){
+void DatasetGenerator::generateData(std::pair<double,double> center,double angle_deg){
     
     distanceData.clear();
     angleData.clear();
+
+    double angle_rad = (2*M_PI*angle_deg)/360;
     
     for (size_t i = 0; i < _num_data; i++)
     {
-        distanceData.emplace_back(circle_inside_distance(center,2*M_PI*i/_num_data,radius));//circle distances
+        distanceData.emplace_back(circle_inside_distance(center,(2*M_PI*i/_num_data) + angle_rad,radius));//circle distances
         
     }
 
-    double angle =0;
+    double angle_data = 0;
     for (size_t i = 0; i < _num_data; i++)
     {
-        angleData.emplace_back(angle);//circle angles
-        angle+=2*M_PI/360;
+        angleData.emplace_back(angle_data);//circle angles
+        angle_data+=2*M_PI/360;
         
     }
 }
