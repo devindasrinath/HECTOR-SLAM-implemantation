@@ -39,7 +39,7 @@ private:
 
     //  Eigen::Affine2d getTransformForState(const Eigen::Vector3d& transVector) const;
     //  void getCompleteHessianDerivs(Eigen::Vector3d robot_pos_old, std::vector<Eigen::Vector2d> point_cloud, Eigen::Matrix3d& H, Eigen::Vector3d& dTr);
-    void updateEstimatedPose(Eigen::Vector3d& estimate, const Eigen::Vector3d& change);
+    // void updateEstimatedPose(Eigen::Vector3d& estimate, const Eigen::Vector3d& change);
     Eigen::Vector2d D_X_D_Y(double x,double y);
 
     Eigen::Vector3d Jac(Eigen::Matrix<double, 1, 2> map_gradient,Eigen::Matrix<double, 2, 3>scan_derivative);

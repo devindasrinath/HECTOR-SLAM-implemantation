@@ -60,11 +60,11 @@ Eigen::Vector3d pre_robot_pos(pre_robot_pos_x,pre_robot_pos_y,pre_robot_pos_thet
 Eigen::Vector3d current_robot_pos((pre_robot_pos(0))/(pow(2,NUM_MAPS-1)),(pre_robot_pos(1))/(pow(2,NUM_MAPS-1)),0);
 
 DatasetGenerator datasetGenerator(360, 60);
-datasetGenerator.generateData(std::make_pair(1,1),0);
+datasetGenerator.generateData(std::make_pair(0,0),0);
 auto generated_distance_data_0 = datasetGenerator.getDistanceData();
 auto generated_angle_data_0 = datasetGenerator.getAngleData();
 
-datasetGenerator.generateData(std::make_pair(1,1),1);
+datasetGenerator.generateData(std::make_pair(1,1),0);
 auto generated_distance_data_1 = datasetGenerator.getDistanceData();
 auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
