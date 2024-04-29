@@ -49,21 +49,22 @@ int main() {
 /********************************************************** grid 1 ******************************************************/
 size_t GRID_STEP_SIZE;
 
-uint8_t grid_step_sizes[]={20,10,5};
+#define NUM_MAPS 4
+uint8_t grid_step_sizes[]={40,20,10,5};
 
-auto pre_robot_pos_x = (GRID_WIDTH/2)/5;
-auto pre_robot_pos_y = (GRID_HEIGTH/2)/5;
+auto pre_robot_pos_x = (GRID_WIDTH/2)/grid_step_sizes[NUM_MAPS-1];
+auto pre_robot_pos_y = (GRID_HEIGTH/2)/grid_step_sizes[NUM_MAPS-1];
 auto pre_robot_pos_theta = 0;
 Eigen::Vector3d pre_robot_pos(pre_robot_pos_x,pre_robot_pos_y,pre_robot_pos_theta);
 
-Eigen::Vector3d current_robot_pos((pre_robot_pos(0))/4,(pre_robot_pos(1))/4,0);
+Eigen::Vector3d current_robot_pos((pre_robot_pos(0))/(pow(2,NUM_MAPS-1)),(pre_robot_pos(1))/(pow(2,NUM_MAPS-1)),0);
 
 DatasetGenerator datasetGenerator(360, 60);
-datasetGenerator.generateData(std::make_pair(0,0),0);
+datasetGenerator.generateData(std::make_pair(1,1),0);
 auto generated_distance_data_0 = datasetGenerator.getDistanceData();
 auto generated_angle_data_0 = datasetGenerator.getAngleData();
 
-datasetGenerator.generateData(std::make_pair(1,0),210);
+datasetGenerator.generateData(std::make_pair(1,1),1);
 auto generated_distance_data_1 = datasetGenerator.getDistanceData();
 auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
@@ -72,7 +73,7 @@ for(auto step_size : grid_step_sizes){
     GRID_STEP_SIZE = step_size;
 
     /* Scaling the previous dataset*/
-    auto  scalar =  (grid_step_sizes[2])/(double (step_size));
+    auto  scalar =  (grid_step_sizes[NUM_MAPS-1])/(double (step_size));
     std::vector<double> generated_distance_data_0_scaled;
     for (double data : generated_distance_data_0) {
         generated_distance_data_0_scaled.emplace_back(data*scalar);
@@ -100,12 +101,18 @@ for(auto step_size : grid_step_sizes){
         auto point_cloud =  scan_data_to_point_cloud(generated_distance_data_1_scaled ,generated_angle_data_1);
 
         /* run localization*/
-        HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} );
-        current_robot_pos = hector_slam.runLocalizationLoop(current_robot_pos,point_cloud,100);
+        HectorSLAM hector_slam(occupancyGridMap.get_cells(),SensorProbabilities{PROB_OCCUPIED,PROB_PRIOR,PROB_FREE} ,NUM_X_CELLS,NUM_Y_CELLS);
+        current_robot_pos = hector_slam.runLocalizationLoop(current_robot_pos,point_cloud,50);
+        // for(int i =0 ;i<50;i++){
+        //     hector_slam.estimateTransformationLogLh(current_robot_pos,  point_cloud);
+        // }
+
+        Eigen::Vector3d new_pos_deg(current_robot_pos(0),current_robot_pos(1),current_robot_pos(2)*360/(2*M_PI));
+        std::cout<<"new_pos : " <<new_pos_deg.transpose()<<std::endl;
 
     }
 
-    if(step_size!=grid_step_sizes[2]){
+    if(step_size!=grid_step_sizes[NUM_MAPS-1]){
         /* Scaling the current robot position*/
         current_robot_pos(0)= current_robot_pos(0)*2.0;
         current_robot_pos(1) = current_robot_pos(1)*2.0;
