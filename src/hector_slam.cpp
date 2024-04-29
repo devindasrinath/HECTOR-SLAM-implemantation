@@ -268,51 +268,51 @@ Eigen::Vector3d HectorSLAM::runLocalization(Eigen::Vector3d robot_pos , std::vec
 
     for(auto scan_endpoint : scan_endpoints){
 
-        auto start1 = std::chrono::high_resolution_clock::now();
+        //auto start1 = std::chrono::high_resolution_clock::now();
         /* M (S_i(ξ))]*/
         auto scan_world_coordinates = get_world_coordinates(robot_pos, scan_endpoint);
 
-        auto start2 = std::chrono::high_resolution_clock::now();
+        //auto start2 = std::chrono::high_resolution_clock::now();
 
         /* ∇M(S_i(ξ)) */
         Eigen::Matrix<double, 1, 2> gradient_of_scan_world_coordinates(D_X_D_Y(scan_world_coordinates(0),scan_world_coordinates(1)));
 
-        auto start3 = std::chrono::high_resolution_clock::now();
+        //auto start3 = std::chrono::high_resolution_clock::now();
         /* (∂S_i(ξ)/∂ξ)*/
         Eigen::Matrix<double,2, 3> gradient_of_map = D_map(robot_pos(2) ,scan_endpoint);
 
-        auto start4 = std::chrono::high_resolution_clock::now();
+        //auto start4 = std::chrono::high_resolution_clock::now();
 
         /* ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ)*/
         Eigen::Matrix<double, 1, 3> jacobian_matrix = Jac(gradient_of_scan_world_coordinates,gradient_of_map);
 
-        auto start5 = std::chrono::high_resolution_clock::now();
+        //auto start5 = std::chrono::high_resolution_clock::now();
         
         /* sigma { ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * [1 − M(S_i(ξ))]} */
         sum_of_scaled_jacobian_matrixes +=jacobian_matrix.transpose()* (1 - M_P(scan_world_coordinates(0),scan_world_coordinates(1)));
 
-        auto start6 = std::chrono::high_resolution_clock::now();
+        //auto start6 = std::chrono::high_resolution_clock::now();
         
         /* sigma {( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )}*/
         sum_of_hessian_matrixes  += Hes(jacobian_matrix);
 
-        auto start7 = std::chrono::high_resolution_clock::now();
+        //auto start7 = std::chrono::high_resolution_clock::now();
 
 
-        auto duration1 = std::chrono::duration_cast<std::chrono::nanoseconds>(start2 - start1).count();
-        auto duration2 = std::chrono::duration_cast<std::chrono::nanoseconds>(start3 - start2).count();
-        auto duration3 = std::chrono::duration_cast<std::chrono::nanoseconds>(start4 - start3).count();
-        auto duration4 = std::chrono::duration_cast<std::chrono::nanoseconds>(start5 - start4).count();
-        auto duration5 = std::chrono::duration_cast<std::chrono::nanoseconds>(start6 - start5).count();
-        auto duration6 = std::chrono::duration_cast<std::chrono::nanoseconds>(start7 - start6).count();
+        // auto duration1 = std::chrono::duration_cast<std::chrono::nanoseconds>(start2 - start1).count();
+        // auto duration2 = std::chrono::duration_cast<std::chrono::nanoseconds>(start3 - start2).count();
+        // auto duration3 = std::chrono::duration_cast<std::chrono::nanoseconds>(start4 - start3).count();
+        // auto duration4 = std::chrono::duration_cast<std::chrono::nanoseconds>(start5 - start4).count();
+        // auto duration5 = std::chrono::duration_cast<std::chrono::nanoseconds>(start6 - start5).count();
+        // auto duration6 = std::chrono::duration_cast<std::chrono::nanoseconds>(start7 - start6).count();
 
-        std::cout << "Execution time 1: " << duration1 << " ns" << std::endl;
-        std::cout << "Execution time 2: " << duration2 << " ns" << std::endl;
-        std::cout << "Execution time 3: " << duration3 << " ns" << std::endl;
-        std::cout << "Execution time 4: " << duration4 << " ns" << std::endl;
-        std::cout << "Execution time 5: " << duration5 << " ns" << std::endl;
-        std::cout << "Execution time 6: " << duration6 << " ns" << std::endl;
-        std::cout << std::endl;
+        // std::cout << "Execution time 1: " << duration1 << " ns" << std::endl;
+        // std::cout << "Execution time 2: " << duration2 << " ns" << std::endl;
+        // std::cout << "Execution time 3: " << duration3 << " ns" << std::endl;
+        // std::cout << "Execution time 4: " << duration4 << " ns" << std::endl;
+        // std::cout << "Execution time 5: " << duration5 << " ns" << std::endl;
+        // std::cout << "Execution time 6: " << duration6 << " ns" << std::endl;
+        // std::cout << std::endl;
 
     }
 

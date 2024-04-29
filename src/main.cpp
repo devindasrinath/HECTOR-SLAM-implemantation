@@ -49,8 +49,8 @@ int main() {
 /********************************************************** grid 1 ******************************************************/
 size_t GRID_STEP_SIZE;
 
-#define NUM_MAPS 4
-uint8_t grid_step_sizes[]={40,20,10,5};
+#define NUM_MAPS 3
+uint8_t grid_step_sizes[]={20,10,5};
 
 auto pre_robot_pos_x = (GRID_WIDTH/2)/grid_step_sizes[NUM_MAPS-1];
 auto pre_robot_pos_y = (GRID_HEIGTH/2)/grid_step_sizes[NUM_MAPS-1];

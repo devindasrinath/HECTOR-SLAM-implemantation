@@ -11,6 +11,7 @@ class OccupancyGridMap{
 
     public:
         OccupancyGridMap(SensorProbabilities sensorProbabilities, uint32_t width, uint32_t height);
+        OccupancyGridMap::~OccupancyGridMap();
         void occupancy_grid_mapping();
         std::pair<int,int> find_occupied_cell_coordinates(double x0, double y0, double x1, double y1);
         void filter_detect_cells(double x0,double y0,double x1,double y1,std::vector<std::pair<int,int>> &points);

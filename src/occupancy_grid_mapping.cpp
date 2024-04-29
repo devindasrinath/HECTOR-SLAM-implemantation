@@ -6,6 +6,11 @@ OccupancyGridMap::OccupancyGridMap(SensorProbabilities sensorProbabilities, uint
     init_cells();
 }
 
+OccupancyGridMap::~OccupancyGridMap()
+{
+    delete _p_cells;
+}
+
 void OccupancyGridMap::init_cells(){
     _p_cells = new std::vector<Cell>(_width*_height);
     for(size_t i=1; i<=_height; i++){
