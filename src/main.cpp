@@ -58,7 +58,7 @@ int main()
 
     /********************************************************** grid 1 ******************************************************/
     #define NUM_MAPS 3
-    uint8_t grid_step_sizes[] = {40, 20, 10};
+    uint8_t grid_step_sizes[] = {20, 10, 5};
 
     double robot_pos_x_old = (GRID_WIDTH / 2) / grid_step_sizes[NUM_MAPS - 1];
     double robot_pos_y_old = (GRID_HEIGTH / 2) / grid_step_sizes[NUM_MAPS - 1];
@@ -66,12 +66,12 @@ int main()
 
     #define NUM_DATA 360
 
-    DatasetGenerator<NUM_DATA> datasetGenerator(30);
+    DatasetGenerator<NUM_DATA> datasetGenerator(60);
     datasetGenerator.generateData(std::make_pair(0, 0), 0);
     auto generated_distance_data_0 = datasetGenerator.getDistanceData();
     auto generated_angle_data_0 = datasetGenerator.getAngleData();
 
-    datasetGenerator.generateData(std::make_pair(2, 1), 2);
+    datasetGenerator.generateData(std::make_pair(2, 1), 0);
     auto generated_distance_data_1 = datasetGenerator.getDistanceData();
     auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
@@ -81,6 +81,8 @@ int main()
 */
 
     /********************************iteration 1**************************************/
+    auto start1 = std::chrono::high_resolution_clock::now();
+
     std::array<double, NUM_DATA> distance_dataset_old_0 = generated_distance_data_0;
     std::array<double, NUM_DATA> angle_dataset_old_0 = generated_angle_data_0;
     std::array<double, NUM_DATA> distance_dataset_new_0 = generated_distance_data_1;
@@ -92,29 +94,15 @@ int main()
     const uint32_t num_y_cells_0 = NUM_Y_CELLS(grid_step_sizes[0]);
     OccupancyGridMap occupancy_grid_map_0(sensorProbabilities_0, num_x_cells_0, num_y_cells_0);
 
-    // Create a promise to store the result
-    std::promise<bool> promise_0;
-
-    // Get the future from the promise
-    std::future<bool> future_0 = promise_0.get_future();
 
     std::thread thread_0([&]() {
-        try{
+        
         grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[0], grid_step_sizes[NUM_MAPS-1],
             distance_dataset_old_0, angle_dataset_old_0,
             distance_dataset_new_0, angle_dataset_new_0,
             robot_pos_old_0,
             point_cloud_0,
             occupancy_grid_map_0);
-            promise_0.set_value(true);
-        }
-        catch(const std::exception& e) {
-            std::cerr << "Exception in main: " << e.what() << std::endl;
-            promise_0.set_value(false);
-        } catch(...) {
-            std::cerr << "Unknown exception in main" << std::endl;
-            promise_0.set_value(false);
-        }
     });
 
 
@@ -164,9 +152,7 @@ int main()
 
 
     /**************************** run localization for all maps ***************************/
-    bool result = future_0.get();
     thread_0.join();
-
     auto new_robot_pos_0 = localization<double,NUM_DATA >(Eigen::Vector3d(robot_pos_old_0[0],robot_pos_old_0[1],robot_pos_old_0[2]),
                                 sensorProbabilities_0,
                                 occupancy_grid_map_0,
@@ -191,7 +177,9 @@ int main()
 
 
 
-
+auto start2 = std::chrono::high_resolution_clock::now();
+auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
+std::cout << "Execution time : " << duration1 << " ms" << std::endl;
 
 
 

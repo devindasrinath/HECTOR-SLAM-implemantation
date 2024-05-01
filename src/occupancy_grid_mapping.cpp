@@ -30,38 +30,31 @@ std::vector<Cell>* OccupancyGridMap::get_cells(){
 }
 
 void OccupancyGridMap::occupancy_grid_mapping(){
-    for(auto &cell:(*_p_cells)){
-        auto it  = std::find(_cells_detected.begin(), _cells_detected.end(), std::make_pair(cell.x,cell.y));
-        if(it != _cells_detected.end()){
+    for(auto cell:_cells_detected){
 
-            if((cell.x == _occupied_cell.first) && (cell.y == _occupied_cell.second)){
+            auto index = (cell.second-1)*_height + (cell.first-1);
+
+            if((cell.first == _occupied_cell.first) && (cell.second == _occupied_cell.second)){
                 /* CASE 1 : cell occupied*/
-                cell.log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_OCCUPIED_N) + cell.pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+                (*_p_cells)[index].log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_OCCUPIED_N) + (*_p_cells)[index].pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
                 //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"occupied , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
                 
             }
             else{
                 /* CASE 2 : cell FREE*/
-                cell.log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_FREE_N) + cell.pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+                (*_p_cells)[index].log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_FREE_N) + (*_p_cells)[index].pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
                 //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"free , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
             }
             
-        }
-        else{
-            /* CASE 3 : cell uknown*/
-            cell.log_odds_ratio = cell.pre_log_odds_ratio;
-           // std::cout<<cell.x<<" , " <<cell.y<< " , "<<"dont know , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
 
-           // std::cout<<"came to unknown cell"<<std::endl;;
-        }
     
         
-        cell.prob_occupied = PROB(cell.log_odds_ratio);
+        (*_p_cells)[index].prob_occupied = PROB((*_p_cells)[index].log_odds_ratio);
 
         // if(came)
         //     std::cout<<cell.x<<" , " <<cell.y<< " , "<<"occupied , "<<cell.log_odds_ratio<<" , "<<cell.prob_occupied<< " , "<<cell.pre_log_odds_ratio<<std::endl;
 
-        cell.pre_log_odds_ratio = cell.log_odds_ratio;
+        (*_p_cells)[index].pre_log_odds_ratio = (*_p_cells)[index].log_odds_ratio;
         
     }
 }
