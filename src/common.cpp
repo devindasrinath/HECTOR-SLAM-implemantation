@@ -15,16 +15,3 @@ int get_sign(double x){
     return int(x/abs(x));
 }
 
-std::vector<Eigen::Vector2d> scan_data_to_point_cloud(std::vector<double> generated_distance_data ,std::vector<double> generated_angle_data){
-
-    std::vector<Eigen::Vector2d> point_cloud;
-
-    for(size_t i = 0;i<generated_distance_data.size();i++)
-    {
-        point_cloud.emplace_back(Eigen::Vector2d(generated_distance_data[i]*sin(generated_angle_data[i]),generated_distance_data[i]*cos(generated_angle_data[i])));
-
-    }
-
-    return point_cloud;
-
-}

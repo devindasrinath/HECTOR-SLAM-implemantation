@@ -145,7 +145,8 @@ double HectorSLAM::D_Y(double x,double y){
 
 Eigen::Vector2d HectorSLAM::D_X_D_Y(double x,double y){
 
-    double d_x , d_y =0;
+    double d_x =0;
+    double d_y =0;
 
     int x0 = floor(x);
     int x1 = ceil(x);

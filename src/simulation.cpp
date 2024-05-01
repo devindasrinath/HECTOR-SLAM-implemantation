@@ -1,8 +1,8 @@
 #include "simulation.h"
 
 
-
-double DatasetGenerator::solveQuadratic(double a, double b, double c) {
+template<size_t N>
+double DatasetGenerator<N>::solveQuadratic(double a, double b, double c) {
     static size_t i = 0;
 
     if(i>=_num_data){
@@ -39,8 +39,8 @@ double DatasetGenerator::solveQuadratic(double a, double b, double c) {
     return 0;
 }
 
-
-double DatasetGenerator::circle_inside_distance(std::pair<double,double> robot_pos,double beam_angle,double radius){
+template<size_t N>
+double DatasetGenerator<N>::circle_inside_distance(std::pair<double,double> robot_pos,double beam_angle,double radius){
 
     auto a =1;
     auto b = 2 *(robot_pos.first * sin(beam_angle) + robot_pos.second * cos(beam_angle));
@@ -49,35 +49,35 @@ double DatasetGenerator::circle_inside_distance(std::pair<double,double> robot_p
     return solveQuadratic(a,b,c);
 }
 
-std::vector<double> DatasetGenerator::getDistanceData(){
+template<size_t N>
+std::array<double,N> DatasetGenerator<N>::getDistanceData(){
     
     return distanceData;
 }
 
-std::vector<double> DatasetGenerator::getAngleData(){
+template<size_t N>
+std::array<double,N> DatasetGenerator<N>::getAngleData(){
 
     return angleData;
 }
 
-void DatasetGenerator::generateData(std::pair<double,double> center,double angle_deg){
+template<size_t N>
+void DatasetGenerator<N>::generateData(std::pair<double,double> center,double angle_deg){
     
-    distanceData.clear();
-    angleData.clear();
 
     double angle_rad = (2*M_PI*angle_deg)/360;
     
     for (size_t i = 0; i < _num_data; i++)
     {
-        distanceData.emplace_back(circle_inside_distance(center,(2*M_PI*i/_num_data) + angle_rad,radius));//circle distances
+        distanceData[i] = (circle_inside_distance(center,(2*M_PI*i/_num_data) + angle_rad,radius));//circle distances
         
     }
 
     double angle_data = 0;
     for (size_t i = 0; i < _num_data; i++)
     {
-        angleData.emplace_back(angle_data);//circle angles
+        angleData[i] = (angle_data);//circle angles
         angle_data+=2*M_PI/360;
         
     }
 }
-
