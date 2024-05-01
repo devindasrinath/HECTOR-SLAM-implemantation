@@ -94,3 +94,16 @@ sf::Vertex* Grid::draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size
 
 
 
+sf::CircleShape* Grid::draw_point(size_t x1 , size_t y1, size_t r)
+{
+    auto _p_circle = new sf::CircleShape();
+    _p_circle->setRadius(r);
+    _p_circle->setPosition(sf::Vector2f(x1 *_grid_parameters.step_size+ _grid_parameters.origin.first
+        , _grid_parameters.grid_height - y1*_grid_parameters.step_size - _grid_parameters.origin.second));
+        
+    _p_circle->setFillColor(sf::Color::Red);
+    _p_circle->setOutlineColor(sf::Color::Blue);
+
+
+    return _p_circle;
+}

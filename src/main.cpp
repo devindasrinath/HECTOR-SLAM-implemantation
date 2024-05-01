@@ -46,15 +46,13 @@ int main()
 {
 
     // Create the window
-    //    sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
+       sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-    //     GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 10, std::make_pair(10/2 ,10/2),sf::Color(0,100,0) };
-    //     Grid grid(grid_paramters);
+        GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 5, std::make_pair(6 ,6),sf::Color(0,100,0) };
+        Grid grid(grid_paramters);
 
-    //     auto p_grid_vertice_array = grid.init_grid();
-    //     auto p_grid_text = grid.init_texts();
-
-    //     std::vector<sf::Vertex> lines;
+        auto p_grid_vertice_array = grid.init_grid();
+        auto p_grid_text = grid.init_texts();
 
     /********************************************************** grid 1 ******************************************************/
     #define NUM_MAPS 3
@@ -71,7 +69,7 @@ int main()
     auto generated_distance_data_0 = datasetGenerator.getDistanceData();
     auto generated_angle_data_0 = datasetGenerator.getAngleData();
 
-    datasetGenerator.generateData(std::make_pair(2, 1), 0);
+    datasetGenerator.generateData(std::make_pair(0.1, 0.1), 0);
     auto generated_distance_data_1 = datasetGenerator.getDistanceData();
     auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
@@ -182,31 +180,43 @@ auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - 
 std::cout << "Execution time : " << duration1 << " ms" << std::endl;
 
 
+/********************************************DRAW CELLS***************************************/
+std::vector<sf::RectangleShape*> cells_for_draw;
+for(auto cell:(*(occupancy_grid_map_2.get_cells()))){
+    cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
+    // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
+}
+
+/********************************************DRAW Robot***************************************/
+sf::CircleShape *robot =  grid.draw_point(new_robot_pos_2(0) , new_robot_pos_2(1), 3);
+
 
 // Run the main loop
-// while (window.isOpen()) {
+while (window.isOpen()) {
 //     // Handle events
-//     sf::Event event;
-//     while (window.pollEvent(event)) {
-//         if (event.type == sf::Event::Closed)
-//             window.close();
-//     }
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed)
+            window.close();
+    }
 
 //     // Clear the window
-//     window.clear(sf::Color::Black);
+    window.clear(sf::Color::Black);
 
 //     // window.draw(*p_grid_text);
 //     // for(auto cell:cells_for_draw1){
 //     //     window.draw(*cell);
 //     // }
-//     // for(auto cell:cells_for_draw){
-//     //     window.draw(*cell);
-//     // }
+    for(auto cell:cells_for_draw){
+        window.draw(*cell);
+    }
+
+    window.draw(*robot);
 //     window.draw(&lines[0],720,sf::Lines);
 //     window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
 //     // Display the content of the window
-//     window.display();
-// }
+    window.display();
+}
 
 return 0;
 }

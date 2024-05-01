@@ -25,6 +25,7 @@ class Grid{
         sf::RectangleShape* draw_cell(size_t x, size_t y,sf::Color color );
         sf::Vertex* draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2);
         sf::Vertex* draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2);
+        sf::CircleShape* draw_point(size_t x1 , size_t y1, size_t r);
 
 
     private:
@@ -35,6 +36,7 @@ class Grid{
         sf::Vector2f _cell_vector;
         sf::Vector2f _cell_position;
         sf::Vertex _line_points[2];
+        
         
 };
 
