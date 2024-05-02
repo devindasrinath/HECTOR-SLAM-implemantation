@@ -16,7 +16,8 @@
 #define PROB_FREE 0.1
 
 #define NO_CELL -1
-
+#define NUM_MAPS 3
+#define NUM_DATA 360
 
 void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points);
 Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);

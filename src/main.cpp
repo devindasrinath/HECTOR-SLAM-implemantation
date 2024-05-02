@@ -29,6 +29,9 @@ Eigen::Vector3d localization(  Eigen::Vector3d robot_pos,
                     OccupancyGridMap &occupancyGridMap,
                     std::array<Eigen::Vector2d,N> &point_cloud,
                     const uint32_t &num_x_cells, const uint32_t &num_y_cells) ;
+
+bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_dataset_old,std::array<double, NUM_DATA> &angle_dataset_old,std::array<double, NUM_DATA> &distance_dataset_new, std::array<double, NUM_DATA> &angle_dataset_new,double robot_pos_old[],double robot_pos_new[],std::vector<Cell> &cells );
+void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window );
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -45,24 +48,25 @@ Eigen::Vector3d localization(  Eigen::Vector3d robot_pos,
 int main()
 {
 
-    // Create the window
-       sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
+    /*************************************************** create window and grid ******************************************************/
+    sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-        GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 5, std::make_pair(6 ,6),sf::Color(0,100,0) };
-        Grid grid(grid_paramters);
+    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 5, std::make_pair(6 ,6),sf::Color(0,100,0) };
+    Grid grid(grid_paramters);
 
-        auto p_grid_vertice_array = grid.init_grid();
-        auto p_grid_text = grid.init_texts();
+    auto p_grid_vertice_array = grid.init_grid();
+    auto p_grid_text = grid.init_texts();
 
-    /********************************************************** grid 1 ******************************************************/
-    #define NUM_MAPS 3
+    /********************************************************** generate dataset 1,2 ******************************************************/
+    
     uint8_t grid_step_sizes[] = {20, 10, 5};
 
     double robot_pos_x_old = (GRID_WIDTH / 2) / grid_step_sizes[NUM_MAPS - 1];
     double robot_pos_y_old = (GRID_HEIGTH / 2) / grid_step_sizes[NUM_MAPS - 1];
     double robot_pos_theta_old = 0;
-
-    #define NUM_DATA 360
+    double robot_pos_old[] = {robot_pos_x_old,robot_pos_y_old,robot_pos_theta_old};
+    double robot_pos_new[3] = {};
+    std::vector<Cell> cells = {};
 
     DatasetGenerator<NUM_DATA> datasetGenerator(60);
     datasetGenerator.generateData(std::make_pair(0, 0), 0);
@@ -74,149 +78,20 @@ int main()
     auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
 
-/*
-* NOTE: WE assume that all the data(distances, robot pos ..) are available in highest accuracy way
-*/
+    runSLAM(grid_step_sizes, generated_distance_data_0,generated_angle_data_0,generated_distance_data_1, generated_angle_data_1,robot_pos_old,robot_pos_new,cells );
 
-    /********************************iteration 1**************************************/
-    auto start1 = std::chrono::high_resolution_clock::now();
+    drawNewMap(cells, robot_pos_new, grid,window );
 
-    std::array<double, NUM_DATA> distance_dataset_old_0 = generated_distance_data_0;
-    std::array<double, NUM_DATA> angle_dataset_old_0 = generated_angle_data_0;
-    std::array<double, NUM_DATA> distance_dataset_new_0 = generated_distance_data_1;
-    std::array<double, NUM_DATA> angle_dataset_new_0 = generated_angle_data_1;
-    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_0;
-    double robot_pos_old_0[] = {robot_pos_x_old, robot_pos_y_old, robot_pos_theta_old};
-    SensorProbabilities sensorProbabilities_0 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
-    const uint32_t num_x_cells_0 = NUM_X_CELLS(grid_step_sizes[0]);
-    const uint32_t num_y_cells_0 = NUM_Y_CELLS(grid_step_sizes[0]);
-    OccupancyGridMap occupancy_grid_map_0(sensorProbabilities_0, num_x_cells_0, num_y_cells_0);
-
-
-    std::thread thread_0([&]() {
-        
-        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[0], grid_step_sizes[NUM_MAPS-1],
-            distance_dataset_old_0, angle_dataset_old_0,
-            distance_dataset_new_0, angle_dataset_new_0,
-            robot_pos_old_0,
-            point_cloud_0,
-            occupancy_grid_map_0);
-    });
+    while (window.isOpen()) {
+        sf::Event event;
+        while (window.pollEvent(event)) {
+            if (event.type == sf::Event::Closed)
+                window.close();
+        }
+    }   
 
 
 
-    /********************************iteration 2**************************************/
-    std::array<double, NUM_DATA> distance_dataset_old_1 = generated_distance_data_0;
-    std::array<double, NUM_DATA> angle_dataset_old_1 = generated_angle_data_0;
-    std::array<double, NUM_DATA> distance_dataset_new_1 = generated_distance_data_1;
-    std::array<double, NUM_DATA> angle_dataset_new_1 = generated_angle_data_1;
-    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_1;
-    double robot_pos_old_1[] = {robot_pos_x_old, robot_pos_y_old, robot_pos_theta_old};
-    SensorProbabilities sensorProbabilities_1 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
-    const uint32_t num_x_cells_1 = NUM_X_CELLS(grid_step_sizes[1]);
-    const uint32_t num_y_cells_1 = NUM_Y_CELLS(grid_step_sizes[1]);
-    OccupancyGridMap occupancy_grid_map_1(sensorProbabilities_1, num_x_cells_1, num_y_cells_1);
-
-    std::thread thread_1([&]() {
-        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[1], grid_step_sizes[NUM_MAPS-1],
-            distance_dataset_old_1, angle_dataset_old_1,
-            distance_dataset_new_1, angle_dataset_new_1,
-            robot_pos_old_1,
-            point_cloud_1,
-            occupancy_grid_map_1);
-    });
-
-
-    /********************************iteration 3**************************************/
-    std::array<double, NUM_DATA> distance_dataset_old_2 = generated_distance_data_0;
-    std::array<double, NUM_DATA> angle_dataset_old_2 = generated_angle_data_0;
-    std::array<double, NUM_DATA> distance_dataset_new_2 = generated_distance_data_1;
-    std::array<double, NUM_DATA> angle_dataset_new_2 = generated_angle_data_1;
-    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_2;
-    double robot_pos_old_2[] = {robot_pos_x_old, robot_pos_y_old, robot_pos_theta_old};
-    SensorProbabilities sensorProbabilities_2 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
-    const uint32_t num_x_cells_2 = NUM_X_CELLS(grid_step_sizes[2]);
-    const uint32_t num_y_cells_2 = NUM_Y_CELLS(grid_step_sizes[2]);
-    OccupancyGridMap occupancy_grid_map_2(sensorProbabilities_2, num_x_cells_2, num_y_cells_2);
-
-    std::thread thread_2([&]() {
-        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[2], grid_step_sizes[NUM_MAPS-1],
-            distance_dataset_old_2, angle_dataset_old_2,
-            distance_dataset_new_2, angle_dataset_new_2,
-            robot_pos_old_2,
-            point_cloud_2,
-            occupancy_grid_map_2);
-    });
-
-
-    /**************************** run localization for all maps ***************************/
-    thread_0.join();
-    auto new_robot_pos_0 = localization<double,NUM_DATA >(Eigen::Vector3d(robot_pos_old_0[0],robot_pos_old_0[1],robot_pos_old_0[2]),
-                                sensorProbabilities_0,
-                                occupancy_grid_map_0,
-                                point_cloud_0,
-                                num_x_cells_0, num_y_cells_0);
-
-
-    thread_1.join();
-    auto new_robot_pos_1 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_0(0)*2,new_robot_pos_0(1)*2,new_robot_pos_0(2)),
-                                sensorProbabilities_1,
-                                occupancy_grid_map_1,
-                                point_cloud_1,
-                                num_x_cells_1, num_y_cells_1);
-
-
-    thread_2.join();
-    auto new_robot_pos_2 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_1(0)*2,new_robot_pos_1(1)*2,new_robot_pos_1(2)),
-                                sensorProbabilities_2,
-                                occupancy_grid_map_2,
-                                point_cloud_2,
-                                num_x_cells_2, num_y_cells_2);
-
-
-
-auto start2 = std::chrono::high_resolution_clock::now();
-auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
-std::cout << "Execution time : " << duration1 << " ms" << std::endl;
-
-
-/********************************************DRAW CELLS***************************************/
-std::vector<sf::RectangleShape*> cells_for_draw;
-for(auto cell:(*(occupancy_grid_map_2.get_cells()))){
-    cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
-    // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
-}
-
-/********************************************DRAW Robot***************************************/
-sf::CircleShape *robot =  grid.draw_point(new_robot_pos_2(0) , new_robot_pos_2(1), 3);
-
-
-// Run the main loop
-while (window.isOpen()) {
-//     // Handle events
-    sf::Event event;
-    while (window.pollEvent(event)) {
-        if (event.type == sf::Event::Closed)
-            window.close();
-    }
-
-//     // Clear the window
-    window.clear(sf::Color::Black);
-
-//     // window.draw(*p_grid_text);
-//     // for(auto cell:cells_for_draw1){
-//     //     window.draw(*cell);
-//     // }
-    for(auto cell:cells_for_draw){
-        window.draw(*cell);
-    }
-
-    window.draw(*robot);
-//     window.draw(&lines[0],720,sf::Lines);
-//     window.draw(&(p_grid_vertice_array->at(0)),p_grid_vertice_array->size(),sf::Lines);
-//     // Display the content of the window
-    window.display();
-}
 
 return 0;
 }
@@ -284,4 +159,152 @@ Eigen::Vector3d localization(  Eigen::Vector3d robot_pos,
     std::cout << "new_pos : " << new_pos_deg.transpose() << std::endl;
 
     return current_robot_pos;
+}
+
+
+
+bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_dataset_old,std::array<double, NUM_DATA> &angle_dataset_old,std::array<double, NUM_DATA> &distance_dataset_new, std::array<double, NUM_DATA> &angle_dataset_new,double robot_pos_old[],double robot_pos_new[],std::vector<Cell> &cells ){
+    /*
+* NOTE: WE assume that all the data(distances, robot pos ..) are available in highest accuracy way
+*/
+
+    /********************************iteration 1**************************************/
+    auto start1 = std::chrono::high_resolution_clock::now();
+
+    std::array<double, NUM_DATA> distance_dataset_old_0 = distance_dataset_old;
+    std::array<double, NUM_DATA> angle_dataset_old_0 = angle_dataset_old;
+    std::array<double, NUM_DATA> distance_dataset_new_0 = distance_dataset_new;
+    std::array<double, NUM_DATA> angle_dataset_new_0 = angle_dataset_new;
+    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_0;
+    double robot_pos_old_0[] = {robot_pos_old[0], robot_pos_old[1], robot_pos_old[2]};
+    SensorProbabilities sensorProbabilities_0 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+    const uint32_t num_x_cells_0 = NUM_X_CELLS(grid_step_sizes[0]);
+    const uint32_t num_y_cells_0 = NUM_Y_CELLS(grid_step_sizes[0]);
+    OccupancyGridMap occupancy_grid_map_0(sensorProbabilities_0, num_x_cells_0, num_y_cells_0);
+
+
+    std::thread thread_0([&]() {
+        
+        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[0], grid_step_sizes[NUM_MAPS-1],
+            distance_dataset_old_0, angle_dataset_old_0,
+            distance_dataset_new_0, angle_dataset_new_0,
+            robot_pos_old_0,
+            point_cloud_0,
+            occupancy_grid_map_0);
+    });
+
+
+
+    /********************************iteration 2**************************************/
+    std::array<double, NUM_DATA> distance_dataset_old_1 = distance_dataset_old;
+    std::array<double, NUM_DATA> angle_dataset_old_1 = angle_dataset_old;
+    std::array<double, NUM_DATA> distance_dataset_new_1 = distance_dataset_new;
+    std::array<double, NUM_DATA> angle_dataset_new_1 = angle_dataset_new;
+    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_1;
+    double robot_pos_old_1[] = {robot_pos_old[0], robot_pos_old[1], robot_pos_old[2]};
+    SensorProbabilities sensorProbabilities_1 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+    const uint32_t num_x_cells_1 = NUM_X_CELLS(grid_step_sizes[1]);
+    const uint32_t num_y_cells_1 = NUM_Y_CELLS(grid_step_sizes[1]);
+    OccupancyGridMap occupancy_grid_map_1(sensorProbabilities_1, num_x_cells_1, num_y_cells_1);
+
+    std::thread thread_1([&]() {
+        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[1], grid_step_sizes[NUM_MAPS-1],
+            distance_dataset_old_1, angle_dataset_old_1,
+            distance_dataset_new_1, angle_dataset_new_1,
+            robot_pos_old_1,
+            point_cloud_1,
+            occupancy_grid_map_1);
+    });
+
+
+    /********************************iteration 3**************************************/
+    std::array<double, NUM_DATA> distance_dataset_old_2 = distance_dataset_old;
+    std::array<double, NUM_DATA> angle_dataset_old_2 = angle_dataset_old;
+    std::array<double, NUM_DATA> distance_dataset_new_2 = distance_dataset_new;
+    std::array<double, NUM_DATA> angle_dataset_new_2 = angle_dataset_new;
+    std::array<Eigen::Vector2d,NUM_DATA> point_cloud_2;
+    double robot_pos_old_2[] = {robot_pos_old[0], robot_pos_old[1], robot_pos_old[2]};
+    SensorProbabilities sensorProbabilities_2 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
+    const uint32_t num_x_cells_2 = NUM_X_CELLS(grid_step_sizes[2]);
+    const uint32_t num_y_cells_2 = NUM_Y_CELLS(grid_step_sizes[2]);
+    OccupancyGridMap occupancy_grid_map_2(sensorProbabilities_2, num_x_cells_2, num_y_cells_2);
+
+    std::thread thread_2([&]() {
+        grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[2], grid_step_sizes[NUM_MAPS-1],
+            distance_dataset_old_2, angle_dataset_old_2,
+            distance_dataset_new_2, angle_dataset_new_2,
+            robot_pos_old_2,
+            point_cloud_2,
+            occupancy_grid_map_2);
+    });
+
+
+    /**************************** run localization for all maps ***************************/
+    thread_0.join();
+    auto new_robot_pos_0 = localization<double,NUM_DATA >(Eigen::Vector3d(robot_pos_old_0[0],robot_pos_old_0[1],robot_pos_old_0[2]),
+                                sensorProbabilities_0,
+                                occupancy_grid_map_0,
+                                point_cloud_0,
+                                num_x_cells_0, num_y_cells_0);
+
+
+    thread_1.join();
+    auto new_robot_pos_1 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_0(0)*2,new_robot_pos_0(1)*2,new_robot_pos_0(2)),
+                                sensorProbabilities_1,
+                                occupancy_grid_map_1,
+                                point_cloud_1,
+                                num_x_cells_1, num_y_cells_1);
+
+
+    thread_2.join();
+    auto new_robot_pos_2 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_1(0)*2,new_robot_pos_1(1)*2,new_robot_pos_1(2)),
+                                sensorProbabilities_2,
+                                occupancy_grid_map_2,
+                                point_cloud_2,
+                                num_x_cells_2, num_y_cells_2);
+
+
+
+auto start2 = std::chrono::high_resolution_clock::now();
+auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
+std::cout << "Execution time : " << duration1 << " ms" << std::endl;
+
+cells = *(occupancy_grid_map_2.get_cells());
+robot_pos_new[0] = new_robot_pos_2[0];
+robot_pos_new[1] = new_robot_pos_2[1];
+robot_pos_new[2] = new_robot_pos_2[2];
+return true;
+}
+
+
+void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window ){
+        /********************************************DRAW CELLS***************************************/
+    std::vector<sf::RectangleShape*> cells_for_draw;
+    for(auto cell:cells){
+        cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
+        // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
+    }
+
+    /********************************************DRAW Robot***************************************/
+    sf::CircleShape *robot =  grid.draw_point(robot_pos[0] , robot_pos[1], 3);
+
+    if (window.isOpen()) {
+        // sf::Event event;
+        // while (window.pollEvent(event)) {
+        //     if (event.type == sf::Event::Closed)
+        //         window.close();
+        // }
+
+        window.clear(sf::Color::Black);
+
+
+        for(auto cell:cells_for_draw){
+            window.draw(*cell);
+        }
+
+        window.draw(*robot);
+
+        window.display();
+    }
+
 }
