@@ -343,88 +343,88 @@ Eigen::Vector3d HectorSLAM::runLocalizationLoop(Eigen::Vector3d robot_pos_old, s
 }
 
 
-// void HectorSLAM::getCompleteHessianDerivs(Eigen::Vector3d robot_pos_old, std::vector<Eigen::Vector2d> point_cloud, Eigen::Matrix3d& H, Eigen::Vector3d& dTr)
-//   {
-//     int size = point_cloud.size();
+void HectorSLAM::getCompleteHessianDerivs(Eigen::Vector3d robot_pos_old, std::vector<Eigen::Vector2d> point_cloud, Eigen::Matrix3d& H, Eigen::Vector3d& dTr)
+  {
+    int size = point_cloud.size();
 
-//     Eigen::Affine2d transform(getTransformForState(robot_pos_old));
+    Eigen::Affine2d transform(getTransformForState(robot_pos_old));
 
-//     float sinRot = sin(robot_pos_old[2]);
-//     float cosRot = cos(robot_pos_old[2]);
+    float sinRot = sin(robot_pos_old[2]);
+    float cosRot = cos(robot_pos_old[2]);
 
-//     H = Eigen::Matrix3d::Zero();
-//     dTr = Eigen::Vector3d::Zero();
+    H = Eigen::Matrix3d::Zero();
+    dTr = Eigen::Vector3d::Zero();
 
-//     for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
 
-//       const Eigen::Vector2d& currPoint(point_cloud[i]);
+      const Eigen::Vector2d& currPoint(point_cloud[i]);
 
-//     auto transform_curr = transform * currPoint;
-//       Eigen::Vector3d transformedPointData(M_P(transform_curr(0),transform_curr(1)) , D_X(transform_curr(0),transform_curr(1)),D_Y(transform_curr(0),transform_curr(1)));
+    auto transform_curr = transform * currPoint;
+      Eigen::Vector3d transformedPointData(M_P(transform_curr(0),transform_curr(1)) , D_X(transform_curr(0),transform_curr(1)),D_Y(transform_curr(0),transform_curr(1)));
 
-//       float funVal = 1.0f - transformedPointData[0];
+      float funVal = 1.0f - transformedPointData[0];
 
-//       dTr[0] += transformedPointData[1] * funVal;
-//       dTr[1] += transformedPointData[2] * funVal;
+      dTr[0] += transformedPointData[1] * funVal;
+      dTr[1] += transformedPointData[2] * funVal;
 
-//       float rotDeriv = ((-sinRot * currPoint.x() + cosRot * currPoint.y()) * transformedPointData[1] + (-cosRot * currPoint.x() - sinRot * currPoint.y()) * transformedPointData[2]);
+      float rotDeriv = ((-sinRot * currPoint.x() + cosRot * currPoint.y()) * transformedPointData[1] + (-cosRot * currPoint.x() - sinRot * currPoint.y()) * transformedPointData[2]);
 
-//       dTr[2] += rotDeriv * funVal;
+      dTr[2] += rotDeriv * funVal;
 
-//       H(0, 0) += transformedPointData[1]*transformedPointData[1];
-//       H(1, 1) += transformedPointData[2]*transformedPointData[2];
-//       H(2, 2) += rotDeriv*rotDeriv;
+      H(0, 0) += transformedPointData[1]*transformedPointData[1];
+      H(1, 1) += transformedPointData[2]*transformedPointData[2];
+      H(2, 2) += rotDeriv*rotDeriv;
 
-//       H(0, 1) += transformedPointData[1] * transformedPointData[2];
-//       H(0, 2) += transformedPointData[1] * rotDeriv;
-//       H(1, 2) += transformedPointData[2] * rotDeriv;
-//     }
+      H(0, 1) += transformedPointData[1] * transformedPointData[2];
+      H(0, 2) += transformedPointData[1] * rotDeriv;
+      H(1, 2) += transformedPointData[2] * rotDeriv;
+    }
 
-//     H(1, 0) = H(0, 1);
-//     H(2, 0) = H(0, 2);
-//     H(2, 1) = H(1, 2);
+    H(1, 0) = H(0, 1);
+    H(2, 0) = H(0, 2);
+    H(2, 1) = H(1, 2);
 
-//   }
+  }
 
-//   Eigen::Affine2d HectorSLAM::getTransformForState(const Eigen::Vector3d& transVector) const
-//   {
-//     return Eigen::Translation2d(transVector[0], transVector[1]) * Eigen::Rotation2Dd(-transVector[2]);
-//   }
+  Eigen::Affine2d HectorSLAM::getTransformForState(const Eigen::Vector3d& transVector) const
+  {
+    return Eigen::Translation2d(transVector[0], transVector[1]) * Eigen::Rotation2Dd(-transVector[2]);
+  }
 
-// bool HectorSLAM::estimateTransformationLogLh(Eigen::Vector3d& estimate,  const std::vector<Eigen::Vector2d> point_cloud)
-//   {
-//     Eigen::Matrix3d H;
-//     H.Zero();
-//     Eigen::Vector3d dTr;
-//     dTr.Zero();
-//     getCompleteHessianDerivs(estimate, point_cloud, H, dTr);
-//     //std::cout << "\nH\n" << H  << "\n";
-//     //std::cout << "\ndTr\n" << dTr  << "\n";
-
-
-//     if ((H(0, 0) != 0.0f) && (H(1, 1) != 0.0f)) {
+bool HectorSLAM::estimateTransformationLogLh(Eigen::Vector3d& estimate,  const std::vector<Eigen::Vector2d> point_cloud)
+  {
+    Eigen::Matrix3d H;
+    H.Zero();
+    Eigen::Vector3d dTr;
+    dTr.Zero();
+    getCompleteHessianDerivs(estimate, point_cloud, H, dTr);
+    //std::cout << "\nH\n" << H  << "\n";
+    //std::cout << "\ndTr\n" << dTr  << "\n";
 
 
-//       //H += Eigen::Matrix3d::Identity() * 1.0f;
-//       Eigen::Vector3d searchDir (H.inverse() * dTr);
+    if ((H(0, 0) != 0.0f) && (H(1, 1) != 0.0f)) {
 
-//       //std::cout << "\nsearchdir\n" << searchDir  << "\n";
 
-//       if (searchDir[2] > 0.2f) {
-//         searchDir[2] = 0.2f;
-//         std::cout << "SearchDir angle change too large\n";
-//       } else if (searchDir[2] < -0.2f) {
-//         searchDir[2] = -0.2f;
-//         std::cout << "SearchDir angle change too large\n";
-//       }
+      //H += Eigen::Matrix3d::Identity() * 1.0f;
+      Eigen::Vector3d searchDir (H.inverse() * dTr);
 
-//       updateEstimatedPose(estimate, searchDir);
-//       return true;
-//     }
-//     return false;
-//   }
+      //std::cout << "\nsearchdir\n" << searchDir  << "\n";
 
-//   void HectorSLAM::updateEstimatedPose(Eigen::Vector3d& estimate, const Eigen::Vector3d& change)
-//   {
-//     estimate += change;
-//   }
+      if (searchDir[2] > 0.2f) {
+        searchDir[2] = 0.2f;
+        std::cout << "SearchDir angle change too large\n";
+      } else if (searchDir[2] < -0.2f) {
+        searchDir[2] = -0.2f;
+        std::cout << "SearchDir angle change too large\n";
+      }
+
+      updateEstimatedPose(estimate, searchDir);
+      return true;
+    }
+    return false;
+  }
+
+  void HectorSLAM::updateEstimatedPose(Eigen::Vector3d& estimate, const Eigen::Vector3d& change)
+  {
+    estimate += change;
+  }

@@ -11,7 +11,214 @@
 #define GRID_HEIGTH 840
 
 
+double circle_points[200][2] = {
+    {30.0, 0.0},
+    {29.985047673785214, 0.9470564929443158},
+    {29.940205599944804, 1.8931689393802094},
+    {29.865518478033177, 2.837394233845348},
+    {29.761060757797733, 3.778791152031527},
+    {29.626936564965714, 4.716421289017523},
+    {29.46327959744941, 5.649349994691536},
+    {29.270252992073207, 6.57664730543074},
+    {29.048049161955216, 7.4973888711092505},
+    {28.79688960470571, 8.410656876510433},
+    {28.517024681633487, 9.315540956225064},
+    {28.20873336818027, 10.211139102123385},
+    {27.872322975831917, 11.096558562496405},
+    {27.508128845783663, 11.97091673197023},
+    {27.116514014664705, 12.833342031306287},
+    {26.69786885265541, 13.682974776210479},
+    {26.25261067435781, 14.518968034285162},
+    {25.781183322807358, 15.340488469269802},
+    {25.284056727040518, 16.146717171728657},
+    {24.761726433659287, 16.93685047535754},
+    {24.21471311285956, 17.71010075809585},
+    {23.643562039415773, 18.46569722724538},
+    {23.048842549139124, 19.202886687813212},
+    {22.431147471351274, 19.920934293312936},
+    {21.791092537939182, 20.619124278275528},
+    {21.129315769580163, 21.296760671739985},
+    {20.446476839749014, 21.953167991012304},
+    {19.74325641714113, 22.58769191500131},
+    {19.02035548716716, 23.19969993646017},
+    {18.278494653195498, 23.78858199248336},
+    {17.518413418239188, 24.353751072630622},
+    {16.740869447803206, 24.894643804071773},
+    {15.946637814627042, 25.410721013168967},
+    {15.136510226075325, 25.9014682629367},
+    {14.311294234946686, 26.366396365843812},
+    {13.471812434487605, 26.80504187144622},
+    {12.618901638413526, 27.216967528364442},
+    {11.753412046754795, 27.601762720145235},
+    {10.876206398358738, 27.959043874573045},
+    {9.988159110892832, 28.28845484602311},
+    {9.090155409206183, 28.589667270475175},
+    {8.183090442918097, 28.862380892833887},
+    {7.267868394113496, 29.10632386622959},
+    {6.345401576034572, 29.321253023001216},
+    {5.416609523667069, 29.506954117091095},
+    {4.482418077127829, 29.66324203761008},
+    {3.5437584587672415, 29.78996099336009},
+    {2.601566344906522, 29.886984668130204},
+    {1.656780933135245, 29.954216346611364},
+    {0.710344006098723, 29.99158901080434},
+    {-0.2368010072913993, 29.99906540682469},
+    {-1.183709972287581, 29.97663808203827},
+    {-2.12943898944048, 29.92432939249016},
+    {-3.073045335498399, 29.842191480619707},
+    {-4.013588403134371, 29.730306223283762},
+    {-4.950130638563979, 29.588785150140083},
+    {-5.88173847611934, 29.417769332472123},
+    {-6.807483268847701, 29.217429242566133},
+    {-7.726442214206902, 28.987964583780656},
+    {-8.637699273934992, 28.72960409147789},
+    {-9.540346087177143, 28.442605305015285},
+    {-10.433482875959472, 28.127254311024753},
+    {-11.316219342107278, 27.783865458235237},
+    {-12.187675554713671, 27.4127810441231},
+    {-13.046982827273789, 27.01437097370255},
+    {-13.89328458361043, 26.589032390796262},
+    {-14.725737211727806, 26.13718928215379},
+    {-15.543510904742327, 25.659292054812354},
+    {-16.345790488052113, 25.15581708712132},
+    {-17.131776231920842, 24.627266253877877},
+    {-17.900684648665678, 24.07416642604734},
+    {-18.65174927365485, 23.497068945566717},
+    {-19.384221429336296, 22.896549075755054},
+    {-20.097370971535657, 22.273205427878494},
+    {-20.790487017279954, 21.62765936444149},
+    {-21.462878653421136, 20.9605543797992},
+    {-22.113875625353366, 20.272555458708265},
+    {-22.74282900513736, 19.564348413455605},
+    {-23.3491118383659, 18.83663920022575},
+    {-23.932119769125578, 18.090153215388437},
+    {-24.491271642431972, 17.325634572407658},
+    {-25.026010083537525, 16.543845360093226},
+    {-25.535802053534837, 15.745564882934053},
+    {-26.020139380701444, 14.93158888427049},
+    {-26.47853926705641, 14.102728753080088},
+    {-26.910544769623904, 13.259810715167374},
+    {-27.315725255923866, 12.403675009564026},
+    {-27.69367683323582, 11.53517505096033},
+    {-28.044022751207947, 10.655176579002859},
+    {-28.366413777410013, 9.764556795306348},
+    {-28.660528545455843, 8.8642034890401},
+    {-28.92607387534835, 7.955014151960362},
+    {-29.162785065727707, 7.037895083771066},
+    {-29.370426157731433, 6.11376048870457},
+    {-29.548790170203315, 5.1835315642229824},
+    {-29.697699306016712, 4.248135582748548},
+    {-29.817005129306633, 3.3085049673382523},
+    {-29.906588713433795, 2.365576362224298},
+    {-29.966360759533305, 1.4202896991467462},
+    {-29.99626168552972, 0.4735872604091046},
+    {-29.99626168552972, -0.47358726040911053},
+    {-29.966360759533305, -1.4202896991467389},
+    {-29.906588713433795, -2.3655763622242905},
+    {-29.817005129306636, -3.3085049673382447},
+    {-29.697699306016712, -4.248135582748553},
+    {-29.548790170203315, -5.183531564222989},
+    {-29.370426157731437, -6.113760488704563},
+    {-29.162785065727707, -7.037895083771059},
+    {-28.926073875348354, -7.955014151960355},
+    {-28.660528545455847, -8.864203489040094},
+    {-28.366413777410013, -9.764556795306355},
+    {-28.04402275120795, -10.655176579002852},
+    {-27.693676833235823, -11.535175050960323},
+    {-27.315725255923866, -12.403675009564019},
+    {-26.910544769623908, -13.259810715167367},
+    {-26.478539267056405, -14.102728753080093},
+    {-26.02013938070144, -14.931588884270495},
+    {-25.53580205353484, -15.74556488293405},
+    {-25.02601008353753, -16.54384536009322},
+    {-24.491271642431975, -17.325634572407655},
+    {-23.932119769125585, -18.09015321538843},
+    {-23.349111838365896, -18.836639200225754},
+    {-22.742829005137363, -19.564348413455598},
+    {-22.11387562535337, -20.27255545870826},
+    {-21.462878653421143, -20.96055437979919},
+    {-20.790487017279958, -21.627659364441485},
+    {-20.097370971535653, -22.273205427878498},
+    {-19.384221429336304, -22.896549075755047},
+    {-18.651749273654858, -23.497068945566713},
+    {-17.90068464866567, -24.07416642604734},
+    {-17.13177623192085, -24.627266253877874},
+    {-16.34579048805211, -25.155817087121324},
+    {-15.543510904742332, -25.65929205481235},
+    {-14.725737211727813, -26.137189282153788},
+    {-13.893284583610425, -26.589032390796266},
+    {-13.046982827273796, -27.014370973702547},
+    {-12.187675554713666, -27.4127810441231},
+    {-11.31621934210729, -27.783865458235233},
+    {-10.433482875959474, -28.127254311024753},
+    {-9.540346087177136, -28.442605305015288},
+    {-8.637699273934999, -28.729604091477885},
+    {-7.7264422142068945, -28.98796458378066},
+    {-6.807483268847714, -29.21742924256613},
+    {-5.881738476119341, -29.417769332472123},
+    {-4.950130638563967, -29.588785150140083},
+    {-4.013588403134378, -29.730306223283762},
+    {-3.073045335498393, -29.84219148061971},
+    {-2.1294389894404873, -29.92432939249016},
+    {-1.1837099722875815, -29.97663808203827},
+    {-0.23680100729141332, -29.99906540682469},
+    {0.7103440060987157, -29.99158901080434},
+    {1.6567809331352508, -29.954216346611364},
+    {2.6015663449065145, -29.886984668130204},
+    {3.543758458767241, -29.78996099336009},
+    {4.482418077127814, -29.66324203761008},
+    {5.416609523667063, -29.506954117091098},
+    {6.345401576034578, -29.321253023001216},
+    {7.267868394113488, -29.10632386622959},
+    {8.183090442918095, -28.862380892833887},
+    {9.090155409206169, -28.589667270475182},
+    {9.988159110892832, -28.28845484602311},
+    {10.876206398358741, -27.959043874573045},
+    {11.753412046754788, -27.601762720145235},
+    {12.61890163841353, -27.21696752836444},
+    {13.471812434487592, -26.805041871446228},
+    {14.311294234946686, -26.366396365843812},
+    {15.136510226075332, -25.901468262936696},
+    {15.946637814627035, -25.410721013168967},
+    {16.74086944780321, -24.894643804071773},
+    {17.518413418239177, -24.35375107263063},
+    {18.278494653195498, -23.78858199248336},
+    {19.020355487167166, -23.199699936460167},
+    {19.743256417141126, -22.587691915001315},
+    {20.446476839749018, -21.9531679910123},
+    {21.12931576958016, -21.296760671739992},
+    {21.79109253793918, -20.619124278275528},
+    {22.431147471351263, -19.92093429331295},
+    {23.048842549139117, -19.20288668781322},
+    {23.643562039415777, -18.46569722724537},
+    {24.214713112859553, -17.710100758095862},
+    {24.761726433659287, -16.93685047535754},
+    {25.28405672704051, -16.14671717172867},
+    {25.781183322807355, -15.340488469269806},
+    {26.252610674357815, -14.518968034285157},
+    {26.697868852655404, -13.682974776210486},
+    {27.116514014664705, -12.833342031306286},
+    {27.508128845783656, -11.970916731970242},
+    {27.872322975831914, -11.096558562496408},
+    {28.20873336818027, -10.21113910212338},
+    {28.517024681633483, -9.315540956225073},
+    {28.79688960470571, -8.41065687651043},
+    {29.048049161955213, -7.497388871109264},
+    {29.270252992073207, -6.576647305430743},
+    {29.46327959744941, -5.649349994691528},
+    {29.62693656496571, -4.716421289017532},
+    {29.761060757797736, -3.7787911520315243},
+    {29.865518478033174, -2.8373942338453615},
+    {29.9402055999448, -1.8931689393802116},
+    {29.985047673785214, -0.9470564929443073},
+    {30.0, -7.34788079488412e-15}
+};
 
+
+
+
+std::atomic_bool value_assigned(false);
+bool end_of_program = false;
 template <typename T, size_t N>
 bool grid_generate_and_mapping(const uint8_t &step_size,
                                const uint8_t &min_step_size,
@@ -31,7 +238,7 @@ Eigen::Vector3d localization(  Eigen::Vector3d robot_pos,
                     const uint32_t &num_x_cells, const uint32_t &num_y_cells) ;
 
 bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_dataset_old,std::array<double, NUM_DATA> &angle_dataset_old,std::array<double, NUM_DATA> &distance_dataset_new, std::array<double, NUM_DATA> &angle_dataset_new,double robot_pos_old[],double robot_pos_new[],std::vector<Cell> &cells );
-void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window );
+void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window, std::vector<sf::RectangleShape*> &cellShapes, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_all_pos );
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -51,11 +258,61 @@ int main()
     /*************************************************** create window and grid ******************************************************/
     sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 5, std::make_pair(6 ,6),sf::Color(0,100,0) };
+    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, 5, std::make_pair(5,5),sf::Color(0,100,0) };
     Grid grid(grid_paramters);
 
     auto p_grid_vertice_array = grid.init_grid();
     auto p_grid_text = grid.init_texts();
+
+    std::vector<sf::Vertex*> robot_path;
+    std::vector<sf::RectangleShape*> cells_for_draw;
+    sf::CircleShape *circleShape = nullptr;
+
+        std::thread thread_3([&]() {
+        while (window.isOpen() && (!end_of_program)) {
+            sf::Event event;
+            // Poll for events
+            while (window.pollEvent(event)) {
+                // Handle different event types
+                switch (event.type) {
+                    case sf::Event::Closed:
+                        end_of_program =true;
+                        window.close();
+                        break;
+                    default:
+                        break; // Handle other events if needed
+                }
+            }
+
+            // Render only if value_assigned.load() is true
+            if (value_assigned.load() && (!end_of_program)) {
+                window.clear(sf::Color::Black);
+
+                if(circleShape!=nullptr){
+                    for (auto cell : cells_for_draw) {
+                        window.draw(*cell);
+                    }
+
+                    window.draw(*circleShape);
+
+                    if(robot_path.size()>=2){
+                        sf::VertexArray vertices(sf::LineStrip, robot_path.size());
+
+                        for(auto i =0; i<robot_path.size();i++){
+                            // Set the position and color of the vertices
+                            vertices[i] = *(robot_path[i]);
+                            //vertices[i+1] = *(robot_path[i+1]);
+                            //std::cout<<vertices[i].position.x<< " "<<vertices[i].position.y<<" "<<vertices[i+1].position.x<<" "<<vertices[i+1].position.y<<std::endl;
+                        }
+                        window.draw(vertices);
+                    }
+                }
+
+                window.display();
+            }
+        }
+        std::cout<<"come to end"<<std::endl;
+    });
 
     /********************************************************** generate dataset 1,2 ******************************************************/
     
@@ -64,36 +321,51 @@ int main()
     double robot_pos_x_old = (GRID_WIDTH / 2) / grid_step_sizes[NUM_MAPS - 1];
     double robot_pos_y_old = (GRID_HEIGTH / 2) / grid_step_sizes[NUM_MAPS - 1];
     double robot_pos_theta_old = 0;
-    double robot_pos_old[] = {robot_pos_x_old,robot_pos_y_old,robot_pos_theta_old};
+    double robot_pos_old[] = {robot_pos_x_old + circle_points[0][0],robot_pos_y_old + circle_points[0][1],robot_pos_theta_old};
     double robot_pos_new[3] = {};
     std::vector<Cell> cells = {};
 
     DatasetGenerator<NUM_DATA> datasetGenerator(60);
-    datasetGenerator.generateData(std::make_pair(0, 0), 0);
+
+
+    /* 0 */
+    datasetGenerator.generateData(std::make_pair(circle_points[0][0], circle_points[0][1]), 0);
     auto generated_distance_data_0 = datasetGenerator.getDistanceData();
     auto generated_angle_data_0 = datasetGenerator.getAngleData();
 
-    datasetGenerator.generateData(std::make_pair(0.1, 0.1), 0);
+    drawNewMap(cells, robot_pos_old, grid,window, cells_for_draw, circleShape,robot_path );
+
+for (auto i = 1;i<200;i++){
+    /* 1 */
+    datasetGenerator.generateData(std::make_pair(circle_points[i][0], circle_points[i][1]), 0);
     auto generated_distance_data_1 = datasetGenerator.getDistanceData();
     auto generated_angle_data_1 = datasetGenerator.getAngleData();
 
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
 
     runSLAM(grid_step_sizes, generated_distance_data_0,generated_angle_data_0,generated_distance_data_1, generated_angle_data_1,robot_pos_old,robot_pos_new,cells );
 
-    drawNewMap(cells, robot_pos_new, grid,window );
+    drawNewMap(cells, robot_pos_new, grid,window, cells_for_draw, circleShape,robot_path );
 
-    while (window.isOpen()) {
-        sf::Event event;
-        while (window.pollEvent(event)) {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
-    }   
+    generated_distance_data_0 = generated_distance_data_1;
+    generated_angle_data_0 = generated_angle_data_1;
+    robot_pos_old[0] = robot_pos_new[0];
+    robot_pos_old[1] = robot_pos_new[1];
+    robot_pos_old[2] = robot_pos_new[2];
+
+    std::cout<<"count : "<<i<<std::endl;
+
+}
+    
 
 
 
 
-return 0;
+    thread_3.join();
+
+    delete circleShape;
+
+    return 0;
 }
 
 template <typename T, size_t N>
@@ -150,9 +422,9 @@ Eigen::Vector3d localization(  Eigen::Vector3d robot_pos,
 
     HectorSLAM hector_slam(occupancyGridMap.get_cells(), sensorProbabilities, num_x_cells, num_y_cells);
     std::vector<Eigen::Vector2d> vec4(point_cloud.begin(), point_cloud.end());
-    auto current_robot_pos = hector_slam.runLocalizationLoop(robot_pos, vec4,20);
-    // for(int i =0 ;i<50;i++){
-    //     hector_slam.estimateTransformationLogLh(current_robot_pos,  point_cloud);
+    auto current_robot_pos = hector_slam.runLocalizationLoop(robot_pos, vec4,10);
+    // for(int i =0 ;i<10;i++){
+    //     hector_slam.estimateTransformationLogLh(robot_pos,  vec4);
     // }
 
     Eigen::Vector3d new_pos_deg(current_robot_pos(0), current_robot_pos(1), current_robot_pos(2) * 360 / (2 * M_PI));
@@ -180,7 +452,7 @@ bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_d
     SensorProbabilities sensorProbabilities_0 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
     const uint32_t num_x_cells_0 = NUM_X_CELLS(grid_step_sizes[0]);
     const uint32_t num_y_cells_0 = NUM_Y_CELLS(grid_step_sizes[0]);
-    OccupancyGridMap occupancy_grid_map_0(sensorProbabilities_0, num_x_cells_0, num_y_cells_0);
+    static OccupancyGridMap occupancy_grid_map_0(sensorProbabilities_0, num_x_cells_0, num_y_cells_0);
 
 
     std::thread thread_0([&]() {
@@ -205,7 +477,7 @@ bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_d
     SensorProbabilities sensorProbabilities_1 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
     const uint32_t num_x_cells_1 = NUM_X_CELLS(grid_step_sizes[1]);
     const uint32_t num_y_cells_1 = NUM_Y_CELLS(grid_step_sizes[1]);
-    OccupancyGridMap occupancy_grid_map_1(sensorProbabilities_1, num_x_cells_1, num_y_cells_1);
+    static OccupancyGridMap occupancy_grid_map_1(sensorProbabilities_1, num_x_cells_1, num_y_cells_1);
 
     std::thread thread_1([&]() {
         grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[1], grid_step_sizes[NUM_MAPS-1],
@@ -227,7 +499,7 @@ bool runSLAM(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distance_d
     SensorProbabilities sensorProbabilities_2 = {PROB_OCCUPIED,PROB_PRIOR,PROB_FREE};
     const uint32_t num_x_cells_2 = NUM_X_CELLS(grid_step_sizes[2]);
     const uint32_t num_y_cells_2 = NUM_Y_CELLS(grid_step_sizes[2]);
-    OccupancyGridMap occupancy_grid_map_2(sensorProbabilities_2, num_x_cells_2, num_y_cells_2);
+    static OccupancyGridMap occupancy_grid_map_2(sensorProbabilities_2, num_x_cells_2, num_y_cells_2);
 
     std::thread thread_2([&]() {
         grid_generate_and_mapping<double,NUM_DATA >(grid_step_sizes[2], grid_step_sizes[NUM_MAPS-1],
@@ -277,34 +549,26 @@ return true;
 }
 
 
-void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window ){
-        /********************************************DRAW CELLS***************************************/
-    std::vector<sf::RectangleShape*> cells_for_draw;
+void drawNewMap(std::vector<Cell> &cells, double robot_pos[], Grid &grid, sf::RenderWindow &window, std::vector<sf::RectangleShape*> &cellShapes, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_path){
+    
+    // static std::vector<Eigen::Vector2d>robot_all_pos;
+    // robot_all_pos.emplace_back(Eigen::Vector2d(robot_pos[0],robot_pos[1]));
+
+    value_assigned.store(false);
+
+    cellShapes.clear();
+    /********************************************DRAW CELLS***************************************/
+    
     for(auto cell:cells){
-        cells_for_draw.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
+        cellShapes.emplace_back(grid.draw_cell(cell.x,cell.y,sf::Color(255*(1-cell.prob_occupied),255*(1-cell.prob_occupied),255*(1-cell.prob_occupied))));
         // std::cout<<cell.x<<" , " <<cell.y<< " , "<<cell.prob_occupied<<std::endl;
     }
 
     /********************************************DRAW Robot***************************************/
-    sf::CircleShape *robot =  grid.draw_point(robot_pos[0] , robot_pos[1], 3);
+    circleShape =  grid.draw_circle(robot_pos[0] , robot_pos[1], 3);
 
-    if (window.isOpen()) {
-        // sf::Event event;
-        // while (window.pollEvent(event)) {
-        //     if (event.type == sf::Event::Closed)
-        //         window.close();
-        // }
+    robot_path.emplace_back(grid.draw_point(robot_pos[0] ,robot_pos[1]));
 
-        window.clear(sf::Color::Black);
-
-
-        for(auto cell:cells_for_draw){
-            window.draw(*cell);
-        }
-
-        window.draw(*robot);
-
-        window.display();
-    }
+    value_assigned.store(true);
 
 }

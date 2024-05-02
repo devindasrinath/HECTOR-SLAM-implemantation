@@ -8,7 +8,7 @@ struct GridParameters{
     size_t grid_height;
     size_t grid_width;
     size_t step_size;
-    std::pair<size_t,size_t> origin;
+    std::pair<double,double> origin;
     sf::Color grid_color;
 
 };
@@ -25,7 +25,8 @@ class Grid{
         sf::RectangleShape* draw_cell(size_t x, size_t y,sf::Color color );
         sf::Vertex* draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2);
         sf::Vertex* draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2);
-        sf::CircleShape* draw_point(size_t x1 , size_t y1, size_t r);
+        sf::CircleShape* draw_circle(double x1 , double y1, size_t r);
+        sf::Vertex* draw_point(double x1 , double y1);
 
 
     private:

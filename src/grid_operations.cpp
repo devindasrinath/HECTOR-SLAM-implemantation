@@ -78,6 +78,19 @@ sf::Vertex* Grid::draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2)
     return _line_points;
 }
 
+sf::Vertex* Grid::draw_point(double x1 , double y1)
+{
+    auto _point = new sf::Vertex();
+
+    _point->position = (sf::Vector2f((x1*_grid_parameters.step_size) + _grid_parameters.origin.first
+        , _grid_parameters.grid_height - (y1*_grid_parameters.step_size) - _grid_parameters.origin.second));
+
+    _point->color = sf::Color::Blue;
+
+    return _point;
+
+}
+
 sf::Vertex* Grid::draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2)
 {
 
@@ -94,15 +107,16 @@ sf::Vertex* Grid::draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size
 
 
 
-sf::CircleShape* Grid::draw_point(size_t x1 , size_t y1, size_t r)
+sf::CircleShape* Grid::draw_circle(double x1 , double y1, size_t r)
 {
     auto _p_circle = new sf::CircleShape();
     _p_circle->setRadius(r);
     _p_circle->setPosition(sf::Vector2f(x1 *_grid_parameters.step_size+ _grid_parameters.origin.first
         , _grid_parameters.grid_height - y1*_grid_parameters.step_size - _grid_parameters.origin.second));
-        
+    _p_circle->setOrigin(r, r) ;   
     _p_circle->setFillColor(sf::Color::Red);
-    _p_circle->setOutlineColor(sf::Color::Blue);
+    _p_circle->setOutlineColor(sf::Color::Yellow);
+    _p_circle->setOutlineThickness(2);
 
 
     return _p_circle;
