@@ -43,23 +43,23 @@ sf::Text* Grid::init_texts(){
     _origin_text.setPosition(_grid_parameters.origin.first,_grid_parameters.grid_height-_grid_parameters.origin.second );
     _origin_text.setOrigin(0,0);
     _origin_text.setFont(_font);
-    _origin_text.setColor(sf::Color::White);
+    _origin_text.setFillColor(sf::Color::White);
     _origin_text.setCharacterSize(12);
 
     return &_origin_text;
 }
 
-sf::RectangleShape* Grid::draw_cell(size_t x, size_t y,sf::Color color = sf::Color::Yellow){
-    auto p_rectangle_shape = new sf::RectangleShape; 
+sf::RectangleShape& Grid::draw_cell(size_t x, size_t y,sf::Color color = sf::Color::Yellow){
+    
     _cell_vector.x = (float) _grid_parameters.step_size;
     _cell_vector.y = (float) _grid_parameters.step_size;
     _cell_position.x =  ((x-0.5)*_grid_parameters.step_size) + _grid_parameters.origin.first;
     _cell_position.y = _grid_parameters.grid_height - ((y+0.5)*_grid_parameters.step_size) - _grid_parameters.origin.second;
-    p_rectangle_shape->setFillColor(color);
-    p_rectangle_shape->setSize(_cell_vector);
-    p_rectangle_shape->setPosition(_cell_position);
+    _rectangle_shape.setFillColor(color);
+    _rectangle_shape.setSize(_cell_vector);
+    _rectangle_shape.setPosition(_cell_position);
 
-    return p_rectangle_shape;
+    return _rectangle_shape;
 
 }
 

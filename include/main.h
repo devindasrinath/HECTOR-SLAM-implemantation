@@ -8,6 +8,7 @@
 
 
 
+
 #define NUM_X_CELLS(GRID_STEP_SIZE) (GRID_WIDTH/GRID_STEP_SIZE)
 #define NUM_Y_CELLS(GRID_STEP_SIZE) (GRID_HEIGTH/GRID_STEP_SIZE)
 #define NUM_CELLS NUM_X_CELLS*NUM_Y_CELLS
@@ -21,3 +22,7 @@
 
 void plotLine(double x0, double y0, double x1, double y1, std::vector<std::pair<int,int>> &points);
 Eigen::Vector3d hector_slam(Eigen::Vector3d robot_pos , std::vector<Eigen::Vector2d> scan_endpoints);
+
+
+
+
