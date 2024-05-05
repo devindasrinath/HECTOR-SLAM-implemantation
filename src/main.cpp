@@ -350,14 +350,12 @@ int main()
                 }
 
                 if(circleShape!=nullptr){
-                    window.draw(*circleShape);
+                    //window.draw(*circleShape);
                 }
                 else{
                     background_completed.store(true);
                 }
-                // auto start2 = std::chrono::high_resolution_clock::now();
-                // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
-                // std::cout << "Execution time : " << duration << " ms" << std::endl;
+
                 std::cout<<frame_num<<std::endl;
                 window.display();
             }
@@ -399,7 +397,7 @@ int main()
         if(data_set_index>=NUM_DATA_SETS){
             break;
         }
-        datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0], circle_points[data_set_index][1]), 0);
+        datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0]*2, circle_points[data_set_index][1]*2), 0);
         auto distance_data = datasetGenerator.getDistanceData();
         auto angle_data = datasetGenerator.getAngleData();
         data_set_index++;
@@ -533,7 +531,7 @@ void runLocalization(Eigen::Vector3d &robot_pos_old, LocalizationData &localizat
 
     /**************************** run localization for all maps ***************************/
 //    auto start2 = std::chrono::high_resolution_clock::now();
-    auto new_robot_pos_0 = localization<double,NUM_DATA >(robot_pos_old,
+    auto new_robot_pos_0 = localization<double,NUM_DATA >(Eigen::Vector3d(robot_pos_old(0)/4,robot_pos_old(1)/4,robot_pos_old(2)),
                                 localizationData0.sensorProbabilities,
                                 localizationData0.occupancy_grid_map,
                                 localizationData0.point_cloud,
