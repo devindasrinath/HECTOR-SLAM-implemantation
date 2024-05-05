@@ -7,6 +7,7 @@
 #include "simulation.h"
 #include <future>
 #include <chrono>
+#include "web_socket.h"
 
 #define GRID_WIDTH 840
 #define GRID_HEIGTH 840
@@ -390,60 +391,67 @@ int main()
     drawNewMap(num_x_cells,num_y_cells, updatedCells,grid);
     while(!background_completed.load());
 
+    ROSBridgeClient client;
+    client.connect("ws://localhost:9090"); // Replace with your ROSBridge server URI
+
+
     while(true){
 
-
+        if(client.message_received)
         /* generate or retrieved  */
-        if(data_set_index>=NUM_DATA_SETS){
-            break;
-        }
-        datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0]*2, circle_points[data_set_index][1]*2), 0);
-        auto distance_data = datasetGenerator.getDistanceData();
-        auto angle_data = datasetGenerator.getAngleData();
-        data_set_index++;
+        {  
+            client.message_received = false;
+
+            if(data_set_index>=NUM_DATA_SETS){
+                break;
+            }
+            datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0]*2, circle_points[data_set_index][1]*2), 0);
+            auto distance_data = datasetGenerator.getDistanceData();
+            auto angle_data = datasetGenerator.getAngleData();
+            data_set_index++;
 
 
-        /* run localization*/
-        if(first_data_set == true){
-            /* no need of find the postion since awe set it as 0,0,0*/
-            double robot_pos_x_old = (GRID_WIDTH / 2) / grid_step_sizes[NUM_MAPS - 1];
-            double robot_pos_y_old = (GRID_HEIGTH / 2) / grid_step_sizes[NUM_MAPS - 1];
-            double robot_pos_theta_old = 0;
-            robot_pos(0) = robot_pos_x_old + circle_points[0][0];
-            robot_pos(1) = robot_pos_y_old + circle_points[0][1];
-            robot_pos(2) = robot_pos_theta_old;
-            first_data_set = false;
-        }
-        else{
-            /* generate point clound data and run algorithm ofr localization*/
-            point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[0],
-                                grid_step_sizes[2],
-                               distance_data,
-                               angle_data,
-                               point_cloud_0);
-            localizationData0.point_cloud = point_cloud_0;
-            point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[1],
-                                grid_step_sizes[2],
-                               distance_data,
-                               angle_data,
-                               point_cloud_1);
-            localizationData1.point_cloud = point_cloud_1;
-            point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[2],
-                                grid_step_sizes[2],
+            /* run localization*/
+            if(first_data_set == true){
+                /* no need of find the postion since awe set it as 0,0,0*/
+                double robot_pos_x_old = (GRID_WIDTH / 2) / grid_step_sizes[NUM_MAPS - 1];
+                double robot_pos_y_old = (GRID_HEIGTH / 2) / grid_step_sizes[NUM_MAPS - 1];
+                double robot_pos_theta_old = 0;
+                robot_pos(0) = robot_pos_x_old + circle_points[0][0];
+                robot_pos(1) = robot_pos_y_old + circle_points[0][1];
+                robot_pos(2) = robot_pos_theta_old;
+                first_data_set = false;
+            }
+            else{
+                /* generate point clound data and run algorithm ofr localization*/
+                point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[0],
+                                    grid_step_sizes[2],
                                 distance_data,
                                 angle_data,
-                                point_cloud_2);
-            localizationData2.point_cloud = point_cloud_2;
+                                point_cloud_0);
+                localizationData0.point_cloud = point_cloud_0;
+                point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[1],
+                                    grid_step_sizes[2],
+                                distance_data,
+                                angle_data,
+                                point_cloud_1);
+                localizationData1.point_cloud = point_cloud_1;
+                point_generate_according_to_grid<double,NUM_DATA>(grid_step_sizes[2],
+                                    grid_step_sizes[2],
+                                    distance_data,
+                                    angle_data,
+                                    point_cloud_2);
+                localizationData2.point_cloud = point_cloud_2;
+                
+                runLocalization(robot_pos, localizationData0,localizationData1, localizationData2,robot_pos);
+            }
+
+            runMapping(grid_step_sizes, distance_data,angle_data, cells,robot_pos );
             
-            runLocalization(robot_pos, localizationData0,localizationData1, localizationData2,robot_pos);
+            drawUpdatedMap(cells, robot_pos, grid, updatedCells, circleShape,robot_path);
+
+            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-
-        runMapping(grid_step_sizes, distance_data,angle_data, cells,robot_pos );
-        
-        drawUpdatedMap(cells, robot_pos, grid, updatedCells, circleShape,robot_path);
-
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-
         
 
     }
