@@ -223,7 +223,7 @@ double circle_points[NUM_DATA_SETS][2] = {
 
 struct LocalizationData {
     SensorProbabilities sensorProbabilities;
-    OccupancyGridMap occupancy_grid_map;
+    OccupancyGridMap *occupancy_grid_map;
     std::array<Eigen::Vector2d, NUM_DATA> point_cloud;
     uint32_t num_x_cells;
     uint32_t num_y_cells;
@@ -303,13 +303,13 @@ int main()
 {
 
 
-    pre_cells.reserve((GRID_WIDTH*GRID_WIDTH)/(grid_step_sizes[2]*grid_step_sizes[2]));
+    pre_cells.reserve((GRID_WIDTH*GRID_WIDTH)/(grid_step_sizes[1]*grid_step_sizes[1]));
     
 
     /*************************************************** create window and grid ******************************************************/
     sf::RenderWindow window(sf::VideoMode(GRID_WIDTH, GRID_HEIGTH), "SFML Test Grid");
 
-    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, grid_step_sizes[NUM_MAPS-1], std::make_pair(grid_step_sizes[NUM_MAPS-1],grid_step_sizes[NUM_MAPS-1]),sf::Color(0,100,0) };
+    GridParameters grid_paramters = {GRID_HEIGTH, GRID_WIDTH, grid_step_sizes[NUM_MAPS-2], std::make_pair(grid_step_sizes[NUM_MAPS-2],grid_step_sizes[NUM_MAPS-2]),sf::Color(0,100,0) };
     Grid grid(grid_paramters);
 
     std::vector<sf::Vertex*> robot_path;
@@ -335,12 +335,14 @@ int main()
             if (values_assigning_to_draw.load() && (!end_of_program) &&(!map_updated.load())) {
                 
                 map_updated.store(true);
-                
-                //auto start1 = std::chrono::high_resolution_clock::now();  
+
+                auto start1 = std::chrono::high_resolution_clock::now(); 
 
                 for (auto &cell : updatedCells) {
                     window.draw(cell);
                 }
+
+
 
                 if(robot_path.size()>=2){
                     sf::VertexArray vertices(sf::LineStrip, robot_path.size());
@@ -349,6 +351,8 @@ int main()
                     }
                     window.draw(vertices);
                 }
+
+
 
                 if(circleShape!=nullptr){
                     //window.draw(*circleShape);
@@ -359,6 +363,10 @@ int main()
 
                 std::cout<<frame_num<<std::endl;
                 window.display();
+
+                auto start2 = std::chrono::high_resolution_clock::now();
+                auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
+                std::cout << "graphic Execution time : " << duration << " ms" << std::endl;
             }
         }
         std::cout<<"come to end"<<std::endl;
@@ -375,9 +383,9 @@ int main()
 
     first_data_set = true;
     std::vector<Cell> cells = {};
-    uint32_t num_cells = (GRID_WIDTH*GRID_HEIGTH)/(grid_step_sizes[2]*grid_step_sizes[2]);
-    uint32_t num_x_cells = (GRID_WIDTH)/grid_step_sizes[2];
-    uint32_t num_y_cells = (GRID_HEIGTH)/grid_step_sizes[2];
+    uint32_t num_cells = (GRID_WIDTH*GRID_HEIGTH)/(grid_step_sizes[1]*grid_step_sizes[1]);
+    uint32_t num_x_cells = (GRID_WIDTH)/grid_step_sizes[1];
+    uint32_t num_y_cells = (GRID_HEIGTH)/grid_step_sizes[1];
     cells.reserve(num_cells);
     DatasetGenerator<NUM_DATA> datasetGenerator(120);
 
@@ -386,30 +394,38 @@ int main()
     std::array<Eigen::Vector2d,NUM_DATA> point_cloud_2;
 
     Eigen::Vector3d robot_pos;
-    int data_set_index = 0;
+    //int data_set_index = 0;
     background_completed.store(false);
     drawNewMap(num_x_cells,num_y_cells, updatedCells,grid);
     while(!background_completed.load());
 
     ROSBridgeClient client;
-    client.connect("ws://localhost:9090"); // Replace with your ROSBridge server URI
+    std::thread web_socket_thread([&](){
+            client.connect("ws://localhost:9090"); 
+    });
+    // Replace with your ROSBridge server URI
 
 
     while(true){
-
-        if(client.message_received)
+        
+        // std::cout<<"status : "<<client.get_status()<<std::endl;
+        if(client.get_status())
         /* generate or retrieved  */
         {  
-            client.message_received = false;
+            
+            
+            client.reset_status();
 
-            if(data_set_index>=NUM_DATA_SETS){
-                break;
-            }
-            datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0]*2, circle_points[data_set_index][1]*2), 0);
-            auto distance_data = datasetGenerator.getDistanceData();
-            auto angle_data = datasetGenerator.getAngleData();
-            data_set_index++;
-
+            // if(data_set_index>=NUM_DATA_SETS){
+            //     break;
+            // }
+            // datasetGenerator.generateData(std::make_pair(circle_points[data_set_index][0]*2, circle_points[data_set_index][1]*2), 0);
+            // auto distance_data = datasetGenerator.getDistanceData();
+            // auto angle_data = datasetGenerator.getAngleData();
+            // data_set_index++;
+            
+            auto distance_data = client.getRanges();
+            auto angle_data = client.getAngles();
 
             /* run localization*/
             if(first_data_set == true){
@@ -445,12 +461,17 @@ int main()
                 
                 runLocalization(robot_pos, localizationData0,localizationData1, localizationData2,robot_pos);
             }
-
+            //auto start1 = std::chrono::high_resolution_clock::now(); 
             runMapping(grid_step_sizes, distance_data,angle_data, cells,robot_pos );
+
+            // auto start2 = std::chrono::high_resolution_clock::now();
+            // auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
+            // std::cout << "logic Execution time : " << duration << " ms" << std::endl;
             
             drawUpdatedMap(cells, robot_pos, grid, updatedCells, circleShape,robot_path);
 
-            //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+            // std::this_thread::sleep_for(std::chrono::milliseconds(10));
         }
         
 
@@ -541,7 +562,7 @@ void runLocalization(Eigen::Vector3d &robot_pos_old, LocalizationData &localizat
 //    auto start2 = std::chrono::high_resolution_clock::now();
     auto new_robot_pos_0 = localization<double,NUM_DATA >(Eigen::Vector3d(robot_pos_old(0)/4,robot_pos_old(1)/4,robot_pos_old(2)),
                                 localizationData0.sensorProbabilities,
-                                localizationData0.occupancy_grid_map,
+                                *localizationData0.occupancy_grid_map,
                                 localizationData0.point_cloud,
                                 localizationData0.num_x_cells, localizationData0.num_y_cells);
 
@@ -549,14 +570,14 @@ void runLocalization(Eigen::Vector3d &robot_pos_old, LocalizationData &localizat
     
     auto new_robot_pos_1 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_0(0)*2,new_robot_pos_0(1)*2,new_robot_pos_0(2)),
                                 localizationData1.sensorProbabilities,
-                                localizationData1.occupancy_grid_map,
+                                *localizationData1.occupancy_grid_map,
                                 localizationData1.point_cloud,
                                 localizationData1.num_x_cells, localizationData1.num_y_cells);
 
     
     auto new_robot_pos_2 = localization<double,NUM_DATA >(Eigen::Vector3d(new_robot_pos_1(0)*2,new_robot_pos_1(1)*2,new_robot_pos_1(2)),
                                 localizationData2.sensorProbabilities,
-                                localizationData2.occupancy_grid_map,
+                                *localizationData2.occupancy_grid_map,
                                 localizationData2.point_cloud,
                                 localizationData2.num_x_cells, localizationData2.num_y_cells);
 
@@ -599,7 +620,7 @@ void runMapping(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distanc
     /*
 * NOTE: WE assume that all the data(distances, robot pos ..) are available in highest accuracy way
 */
-
+    auto start1 = std::chrono::high_resolution_clock::now();
     /********************************iteration 1**************************************/
 
     std::array<double, NUM_DATA> distance_dataset_old_0 = distance_dataset_old;
@@ -658,23 +679,42 @@ void runMapping(uint8_t grid_step_sizes[], std::array<double, NUM_DATA> &distanc
  thread_1.join();
  thread_2.join();
 
+auto start2 = std::chrono::high_resolution_clock::now();
+
 localizationData0.sensorProbabilities = sensorProbabilities_0;
-localizationData0.occupancy_grid_map = occupancy_grid_map_0;
+
 localizationData0.num_x_cells = num_x_cells_0;
 localizationData0.num_y_cells = num_y_cells_0;
 
 
 localizationData1.sensorProbabilities = sensorProbabilities_1;
-localizationData1.occupancy_grid_map = occupancy_grid_map_1;
+
 localizationData1.num_x_cells = num_x_cells_1;
 localizationData1.num_y_cells = num_y_cells_1;
 
 localizationData2.sensorProbabilities = sensorProbabilities_2;
-localizationData2.occupancy_grid_map = occupancy_grid_map_2;
+
 localizationData2.num_x_cells = num_x_cells_2;
 localizationData2.num_y_cells = num_y_cells_2;
 
-cells = *(localizationData2.occupancy_grid_map.get_cells());
+auto start3 = std::chrono::high_resolution_clock::now();
+
+localizationData0.occupancy_grid_map = &occupancy_grid_map_0;
+localizationData1.occupancy_grid_map = &occupancy_grid_map_1;
+localizationData2.occupancy_grid_map = &occupancy_grid_map_2;
+
+
+
+cells = *(localizationData1.occupancy_grid_map->get_cells());
+
+ auto start4 = std::chrono::high_resolution_clock::now();
+auto duration1 = std::chrono::duration_cast<std::chrono::milliseconds>(start2 - start1).count();
+auto duration2 = std::chrono::duration_cast<std::chrono::milliseconds>(start3 - start2).count();
+auto duration3 = std::chrono::duration_cast<std::chrono::milliseconds>(start4 - start3).count();
+std::cout << "Execution time mapping 1: " << duration1<< " ms" << std::endl;
+std::cout << "Execution time mapping 2: " << duration2<< " ms" << std::endl;
+std::cout << "Execution time mapping 3: " << duration3<< " ms" << std::endl;
+
 
 }
 
@@ -723,11 +763,12 @@ void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &g
         }
     }
     
+    //std::cout<<"updated cells : "<<updatedCells.size()<<std::endl;
     /*create robot indicator*/
-    circleShape =  grid.draw_circle(robot_pos(0) , robot_pos(1), 3);
+    circleShape =  grid.draw_circle(robot_pos(0)/2 , robot_pos(1)/2, 3);
 
     /* update robot route continuously*/
-    robot_path.emplace_back(grid.draw_point(robot_pos(0) ,robot_pos(1)));
+    robot_path.emplace_back(grid.draw_point(robot_pos(0)/2 ,robot_pos(1)/2));
 
     /* release the lock the main thread*/
     values_assigning_to_draw.store(true);    

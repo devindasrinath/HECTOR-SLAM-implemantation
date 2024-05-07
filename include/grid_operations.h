@@ -22,7 +22,11 @@ class Grid{
         Grid(GridParameters &grid_parameters);
         std::vector<sf::Vertex>* init_grid();
         sf::Text* init_texts();
+        
         sf::RectangleShape &draw_cell(size_t x, size_t y,sf::Color color );
+
+        void draw_cell(size_t x, size_t y, std::vector<sf::Vertex>& vertices, sf::Color color);
+
         sf::Vertex* draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2);
         sf::Vertex* draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2);
         sf::CircleShape* draw_circle(double x1 , double y1, size_t r);

@@ -63,6 +63,20 @@ sf::RectangleShape& Grid::draw_cell(size_t x, size_t y,sf::Color color = sf::Col
 
 }
 
+void Grid::draw_cell(size_t x, size_t y, std::vector<sf::Vertex>& vertices, sf::Color color= sf::Color::Yellow) {
+    // Default color is yellow if not specified
+
+    sf::Vector2f cellPosition(((x - 0.5) * _grid_parameters.step_size) + _grid_parameters.origin.first,
+                              _grid_parameters.grid_height - ((y + 0.5) * _grid_parameters.step_size) - _grid_parameters.origin.second);
+
+    // Add vertices to form a rectangle
+    vertices.emplace_back(sf::Vector2f(cellPosition.x ,cellPosition.y ), color);
+    vertices.emplace_back(sf::Vector2f(cellPosition.x , cellPosition.y +_grid_parameters.step_size/2), color);
+    vertices.emplace_back(sf::Vector2f(cellPosition.x + _grid_parameters.step_size/2, cellPosition.y + _grid_parameters.step_size/2), color);
+    vertices.emplace_back(sf::Vector2f(cellPosition.x + _grid_parameters.step_size/2, cellPosition.y ), color);
+}
+
+
 
 sf::Vertex* Grid::draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2)
 {
