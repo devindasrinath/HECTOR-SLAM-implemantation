@@ -9,7 +9,7 @@ using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
-#define NUM_DATA 360
+#define NUM_DATA 505
 
 class ROSBridgeClient {
 public:
@@ -107,7 +107,7 @@ private:
                 // auto start1 = std::chrono::high_resolution_clock::now();  
                 for (size_t i = 0; i < NUM_DATA; i++) {
                     if (ranges_array[i].IsDouble()) {
-                        ranges[i] = ranges_array[i].GetDouble();
+                        ranges[i] = ranges_array[i].GetDouble()*40;
                         //std::cout << "Range " << i << ": " << ranges[i] << std::endl;
                     }
                 }

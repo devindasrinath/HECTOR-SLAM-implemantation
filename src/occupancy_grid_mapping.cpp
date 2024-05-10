@@ -23,6 +23,11 @@ void OccupancyGridMap::init_cells(){
             (*_p_cells)[index].pre_log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
         }
     }
+
+    log_prob_occ = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_OCCUPIED_N);
+    log_prob_free = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_FREE_N);
+    log_prob_prior =LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+
 }
 
 std::vector<Cell>* OccupancyGridMap::get_cells(){
@@ -36,19 +41,19 @@ void OccupancyGridMap::occupancy_grid_mapping(){
 
             if((cell.first == _occupied_cell.first) && (cell.second == _occupied_cell.second)){
                 /* CASE 1 : cell occupied*/
-                (*_p_cells)[index].log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_OCCUPIED_N) + (*_p_cells)[index].pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+                (*_p_cells)[index].log_odds_ratio = log_prob_occ + (*_p_cells)[index].pre_log_odds_ratio - log_prob_prior;
                 //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"occupied , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
                 
             }
             else{
                 /* CASE 2 : cell FREE*/
-                (*_p_cells)[index].log_odds_ratio = LOGS_ODDS_RATIO(_sensorProbabilities.PROB_FREE_N) + (*_p_cells)[index].pre_log_odds_ratio - LOGS_ODDS_RATIO(_sensorProbabilities.PROB_PRIOR_N);
+                (*_p_cells)[index].log_odds_ratio = log_prob_free + (*_p_cells)[index].pre_log_odds_ratio - log_prob_prior;
                 //std::cout<<cell.x<<" , " <<cell.y<< " , "<<"free , "<<cell.log_odds_ratio<<" , "<<PROB(cell.log_odds_ratio)<< " , "<<cell.pre_log_odds_ratio<<std::endl;
             }
             
 
     
-        
+    
         (*_p_cells)[index].prob_occupied = PROB((*_p_cells)[index].log_odds_ratio);
 
         // if(came)
@@ -159,13 +164,8 @@ void OccupancyGridMap::plotLine(double x0, double y0, double x1, double y1, std:
 }
 
 
-std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x0, double y0, double x1, double y1){
-
-    int xt,yt=0;
-
-    yt = get_sign(y1-y0)*round(abs(y1-y0)) + y0;
-    xt = get_sign(x1-x0)*round(abs(x1-x0)) + x0;
-    return std::make_pair(xt,yt);
+std::pair<int,int> OccupancyGridMap::find_occupied_cell_coordinates(double x1, double y1){
+    return std::make_pair(round(x1),round(y1));
 }
 
 
@@ -178,10 +178,9 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
     }
     for(size_t i=0;i<distanceDataSet.size();i++)
     {
-        // if(data<0.1){
-        //     angle-=0.012466637417674065;
-        //     continue;
-        // }
+        if(distanceDataSet[i]<=0){
+            continue;
+        }
         _cells_detected.clear();
         
         auto x1_r = distanceDataSet[i]*sin(angleDataSet[i]);
@@ -190,7 +189,8 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
         auto x1_g = (sin(robot_pos(2))*y1_r) +  (cos(robot_pos(2))*x1_r) + robot_pos(0);
         auto y1_g = (-sin(robot_pos(2))*x1_r) +  (cos(robot_pos(2))*y1_r) + robot_pos(1);
         
-        _occupied_cell = find_occupied_cell_coordinates(robot_pos(0),robot_pos(1),x1_g,y1_g);
+        _occupied_cell = find_occupied_cell_coordinates(x1_g,y1_g);
+
 
         filter_detect_cells(robot_pos(0) , robot_pos(0), x1_g,y1_g, _cells_detected);
 

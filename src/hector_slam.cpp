@@ -269,6 +269,9 @@ Eigen::Vector3d HectorSLAM::runLocalization(Eigen::Vector3d robot_pos , std::vec
 
     for(auto scan_endpoint : scan_endpoints){
 
+        if((scan_endpoint(0)==0) && (scan_endpoint(1)==0)){
+            continue;
+        }
         //auto start1 = std::chrono::high_resolution_clock::now();
         /* M (S_i(ξ))]*/
         auto scan_world_coordinates = get_world_coordinates(robot_pos, scan_endpoint);
@@ -288,7 +291,7 @@ Eigen::Vector3d HectorSLAM::runLocalization(Eigen::Vector3d robot_pos , std::vec
         Eigen::Matrix<double, 1, 3> jacobian_matrix = Jac(gradient_of_scan_world_coordinates,gradient_of_map);
 
         //auto start5 = std::chrono::high_resolution_clock::now();
-        
+                
         /* sigma { ( ∇M(S_i(ξ)) * (∂S_i(ξ)/∂ξ) )' * [1 − M(S_i(ξ))]} */
         sum_of_scaled_jacobian_matrixes +=jacobian_matrix.transpose()* (1 - M_P(scan_world_coordinates(0),scan_world_coordinates(1)));
 

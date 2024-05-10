@@ -14,7 +14,7 @@ class OccupancyGridMap{
         OccupancyGridMap()= default;;
         ~OccupancyGridMap();
         void occupancy_grid_mapping();
-        std::pair<int,int> find_occupied_cell_coordinates(double x0, double y0, double x1, double y1);
+        std::pair<int,int> find_occupied_cell_coordinates(double x1, double y1);
         void filter_detect_cells(double x0,double y0,double x1,double y1,std::vector<std::pair<int,int>> &points);
         void runOccupancyGridMap(std::vector<double> distanceDataSet,std::vector<double> angleDataSet,Eigen::Vector3d robot_pos);
         std::vector<Cell>* get_cells();
@@ -31,6 +31,9 @@ class OccupancyGridMap{
         SensorProbabilities _sensorProbabilities;
         uint32_t _width;
         uint32_t _height;
+        double log_prob_occ ;
+        double log_prob_free ;
+        double log_prob_prior ;
 
 
 
