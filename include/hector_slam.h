@@ -44,6 +44,7 @@ private:
 
     Eigen::Vector3d Jac(Eigen::Matrix<double, 1, 2> map_gradient,Eigen::Matrix<double, 2, 3>scan_derivative);
     Eigen::Matrix<double, 3, 3> Hes(Eigen::RowVector3d jacobian_matrix);
+    bool validScanPoint(Eigen::Vector2d point) ;
        
 
 

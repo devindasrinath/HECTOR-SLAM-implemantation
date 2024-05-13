@@ -76,7 +76,14 @@ void Grid::draw_cell(size_t x, size_t y, std::vector<sf::Vertex>& vertices, sf::
     vertices.emplace_back(sf::Vector2f(cellPosition.x + _grid_parameters.step_size/2, cellPosition.y ), color);
 }
 
+std::pair<double,double> Grid::get_cell_grid_pos(size_t x, size_t y) {
 
+    std::pair<double,double> cellPosition(((x - 0.5) * _grid_parameters.step_size) + _grid_parameters.origin.first,
+                              _grid_parameters.grid_height - ((y + 0.5) * _grid_parameters.step_size) - _grid_parameters.origin.second);
+
+    return cellPosition;
+
+}
 
 sf::Vertex* Grid::draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2)
 {
@@ -121,12 +128,16 @@ sf::Vertex* Grid::draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size
 
 
 
-sf::CircleShape* Grid::draw_circle(double x1 , double y1, size_t r)
+ void Grid::update_circle(double x1 , double y1,sf::CircleShape* &_p_circle)
+{
+    _p_circle->setPosition(sf::Vector2f(x1 *_grid_parameters.step_size+ _grid_parameters.origin.first
+        , _grid_parameters.grid_height - y1*_grid_parameters.step_size - _grid_parameters.origin.second));
+}
+
+sf::CircleShape* Grid::create_robot_point(size_t r)
 {
     auto _p_circle = new sf::CircleShape();
     _p_circle->setRadius(r);
-    _p_circle->setPosition(sf::Vector2f(x1 *_grid_parameters.step_size+ _grid_parameters.origin.first
-        , _grid_parameters.grid_height - y1*_grid_parameters.step_size - _grid_parameters.origin.second));
     _p_circle->setOrigin(r, r) ;   
     _p_circle->setFillColor(sf::Color::Red);
     _p_circle->setOutlineColor(sf::Color::Yellow);

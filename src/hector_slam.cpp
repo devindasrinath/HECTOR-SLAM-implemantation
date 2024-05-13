@@ -26,13 +26,34 @@ bool HectorSLAM::isInteger(double value) {
 int HectorSLAM::findCellIndexByXAndY(int x, int y) {
   
     auto index = (x-1) + (y-1)*_width;
-    if (((*_p_cells)[index].x == x) && ((*_p_cells)[index].y == y)) {
+    if ((index <=(_width*_height)) && ((*_p_cells)[index].x == x) && ((*_p_cells)[index].y == y)) {
         return index;
     }
     else{
-        throw std::runtime_error("given cell coordinates are not located in the gird");
+        //throw std::runtime_error("given cell coordinates are not located in the gird");
         return NO_CELL;
     }
+    
+}
+
+/*
+* Check and return the given cell can be process
+*/
+bool HectorSLAM::validScanPoint(Eigen::Vector2d point) {
+  
+    int x0 = floor(point(0));
+    int x1 = ceil(point(0));
+    int y0 = floor(point(1));
+    int y1 = ceil(point(1));
+
+    if ((findCellIndexByXAndY(x0,y0) == NO_CELL)||
+    (findCellIndexByXAndY(x0,y1) == NO_CELL)||
+    (findCellIndexByXAndY(x1,y0) == NO_CELL)||
+    (findCellIndexByXAndY(x1,y1) == NO_CELL)) {
+        return false;
+    }
+    return true;
+
     
 }
 
@@ -275,6 +296,10 @@ Eigen::Vector3d HectorSLAM::runLocalization(Eigen::Vector3d robot_pos , std::vec
         //auto start1 = std::chrono::high_resolution_clock::now();
         /* M (S_i(ξ))]*/
         auto scan_world_coordinates = get_world_coordinates(robot_pos, scan_endpoint);
+
+        if(!validScanPoint(scan_world_coordinates)){
+            continue;
+        }
 
         //auto start2 = std::chrono::high_resolution_clock::now();
 

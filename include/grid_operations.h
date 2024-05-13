@@ -29,8 +29,10 @@ class Grid{
 
         sf::Vertex* draw_line(size_t x1 , size_t y1, size_t x2 , size_t y2);
         sf::Vertex* draw_line_without_grid(size_t x1 , size_t y1, size_t x2 , size_t y2);
-        sf::CircleShape* draw_circle(double x1 , double y1, size_t r);
         sf::Vertex* draw_point(double x1 , double y1);
+        sf::CircleShape* create_robot_point(size_t r);
+        void update_circle(double x1 , double y1,sf::CircleShape*& _p_circle);
+        std::pair<double,double> get_cell_grid_pos(size_t x, size_t y);
 
 
     private:

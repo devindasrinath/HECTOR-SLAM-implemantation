@@ -15,7 +15,7 @@ void OccupancyGridMap::init_cells(){
     _p_cells = new std::vector<Cell>(_width*_height);
     for(size_t i=1; i<=_height; i++){
         for(size_t j=1; j<=_width; j++){
-            auto index = (j-1) + (i-1)*_height;
+            auto index = (j-1) + (i-1)*_width;
             (*_p_cells)[index].x = j;
             (*_p_cells)[index].y = i;
             (*_p_cells)[index].prob_occupied = _sensorProbabilities.PROB_PRIOR_N;
@@ -37,7 +37,11 @@ std::vector<Cell>* OccupancyGridMap::get_cells(){
 void OccupancyGridMap::occupancy_grid_mapping(){
     for(auto cell:_cells_detected){
 
-            auto index = (cell.second-1)*_height + (cell.first-1);
+            auto index = (cell.second-1)*_width + (cell.first-1);
+
+            if(index>(_width*_height)){
+                continue;
+            }
 
             if((cell.first == _occupied_cell.first) && (cell.second == _occupied_cell.second)){
                 /* CASE 1 : cell occupied*/
@@ -176,6 +180,8 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
         throw std::runtime_error("Data sets are not equal!");
         return;
     }
+
+    //std::cout<<"robot_pos : "<<robot_pos(0)<<" "<<robot_pos(1)<<" "<<robot_pos(2)<<std::endl;
     for(size_t i=0;i<distanceDataSet.size();i++)
     {
         if(distanceDataSet[i]<=0){
@@ -192,7 +198,7 @@ void OccupancyGridMap::runOccupancyGridMap(std::vector<double> distanceDataSet,s
         _occupied_cell = find_occupied_cell_coordinates(x1_g,y1_g);
 
 
-        filter_detect_cells(robot_pos(0) , robot_pos(0), x1_g,y1_g, _cells_detected);
+        filter_detect_cells(robot_pos(0) , robot_pos(1), x1_g,y1_g, _cells_detected);
 
         auto it = std::find(_cells_detected.begin(), _cells_detected.end(), _occupied_cell);
 

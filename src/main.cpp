@@ -279,7 +279,7 @@ void mapping(const uint8_t &step_size,
 
 
 
-void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &grid, std::vector<sf::RectangleShape> &updatedCells, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_all_pos );
+void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &grid, std::vector<sf::RectangleShape> &updatedCells,std::vector<sf::RectangleShape> &cellsOfPreviousPosition, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_all_pos );
 
 void drawNewMap(uint32_t num_x_cells,uint32_t num_y_cells, std::vector<sf::RectangleShape> &updatedCells,Grid &grid);
 
@@ -329,6 +329,7 @@ int main()
 
     std::vector<sf::Vertex*> robot_path;
     std::vector<sf::RectangleShape> updatedCells;
+    std::vector<sf::RectangleShape> cellsOfPreviousPosition;
     sf::CircleShape *circleShape = nullptr;
 
         std::thread thread_3([&]() {
@@ -357,7 +358,11 @@ int main()
                     window.draw(cell);
                 }
 
-
+                for (auto &cell : cellsOfPreviousPosition) {
+                    
+                    window.draw(cell);
+                }
+                
 
                 if(robot_path.size()>=2){
                     sf::VertexArray vertices(sf::LineStrip, robot_path.size());
@@ -370,7 +375,7 @@ int main()
 
 
                 if(circleShape!=nullptr){
-                    //window.draw(*circleShape);
+                    window.draw(*circleShape);
                 }
                 else{
                     background_completed.store(true);
@@ -414,6 +419,8 @@ int main()
     background_completed.store(false);
     drawNewMap(num_x_cells,num_y_cells, updatedCells,grid);
     while(!background_completed.load());
+
+    circleShape = grid.create_robot_point(3);
 
     ROSBridgeClient client;
     std::thread web_socket_thread([&](){
@@ -483,7 +490,7 @@ int main()
                 runMapping(grid_step_sizes, distance_data,angle_data, cells,robot_pos );
                 robot_pos_old =robot_pos;
                 first_data_set =false;
-                drawUpdatedMap(cells, robot_pos, grid, updatedCells, circleShape,robot_path);
+                drawUpdatedMap(cells, robot_pos, grid, updatedCells,cellsOfPreviousPosition, circleShape,robot_path);
             }
             else{
                 robot_pos =robot_pos_old;
@@ -781,12 +788,29 @@ void mapping(const uint8_t &step_size,
 }
 
 
-void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &grid, std::vector<sf::RectangleShape> &updatedCells, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_path){
+void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &grid, std::vector<sf::RectangleShape> &updatedCells,std::vector<sf::RectangleShape> &cellsOfPreviousPosition, sf::CircleShape *&circleShape,std::vector<sf::Vertex*> &robot_path){
     
+    static Eigen::Vector3d pre_robot_pos(0,0,0);
     /* lock the main thread*/
     values_assigning_to_draw.store(false);
 
     updatedCells.clear();
+    cellsOfPreviousPosition.clear();
+
+    if(!robot_path.empty()){
+        /*clear the previous robot location*/
+        for(size_t i = 0; i<7;i++){
+            for(size_t j = 0; j<7;j++){
+                /*clear 49 elements*/
+                auto x = round(pre_robot_pos(0)/2) + j -3;
+                auto y = round(pre_robot_pos(1)/2) + i -3;
+                auto prob = cells[int((y-1)*GRID_WIDTH/4 + (x-1))].prob_occupied;
+                //std::cout<<x <<" "<<y<<std::endl;
+                cellsOfPreviousPosition.emplace_back(grid.draw_cell(x,y,sf::Color(255*(1-prob),255*(1-prob),255*(1-prob))));
+            }
+
+        }
+    }
 
     /* collect only updated cells for draw*/
     for(size_t i=0;i<cells.size();i++){
@@ -795,10 +819,10 @@ void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &g
             pre_cells[i].prob_occupied = cells[i].prob_occupied;
         }
     }
-    
+
     //std::cout<<"updated cells : "<<updatedCells.size()<<std::endl;
     /*create robot indicator*/
-    circleShape =  grid.draw_circle(robot_pos(0)/2 , robot_pos(1)/2, 3);
+    grid.update_circle(robot_pos(0)/2 , robot_pos(1)/2,circleShape);
 
     /* update robot route continuously*/
     robot_path.emplace_back(grid.draw_point(robot_pos(0)/2 ,robot_pos(1)/2));
@@ -807,6 +831,7 @@ void drawUpdatedMap(std::vector<Cell> &cells, Eigen::Vector3d robot_pos, Grid &g
     values_assigning_to_draw.store(true);    
     map_updated.store(false);
     frame_num++;
+    pre_robot_pos = robot_pos;
 
 }
 

@@ -67,7 +67,8 @@
         "core": "cpp",
         "dense": "cpp",
         "future": "cpp",
-        "codecvt": "cpp"
+        "codecvt": "cpp",
+        "*.ipp": "cpp"
     },
     "C_Cpp.errorSquiggles": "enabled"
 }
