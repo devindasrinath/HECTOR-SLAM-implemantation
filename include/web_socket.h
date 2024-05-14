@@ -10,6 +10,7 @@ using websocketpp::lib::placeholders::_2;
 using websocketpp::lib::bind;
 
 #define NUM_DATA 505
+#define DATA_RECEIVED 1
 
 class ROSBridgeClient {
 public:
@@ -71,7 +72,6 @@ private:
 
     void on_message(websocketpp::connection_hdl hdl, client::message_ptr msg) {
         std::string payload = msg->get_payload();
-        //std::cout << "Received message: " << payload << std::endl;
 
         // Parse the JSON message
         rapidjson::Document doc;
@@ -94,7 +94,7 @@ private:
                 angle_min = msg_obj["angle_min"].GetDouble();
                 angle_max = msg_obj["angle_max"].GetDouble();
                 angle_increment = msg_obj["angle_increment"].GetDouble();
-                std::cout << "Angle Min: " << angle_min << ", Angle Max: " << angle_max << ", Angle Increment: " << angle_increment << std::endl;
+                //std::cout << "Angle Min: " << angle_min << ", Angle Max: " << angle_max << ", Angle Increment: " << angle_increment << std::endl;
             }
 
             // Extract the "ranges" field
