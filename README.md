@@ -36,21 +36,24 @@ This project provides a complete C++ implementation of the Hector SLAM (Simultan
 
 ## Configuration
 
--**LiDAR Configuration:**
-    Define the number of samples from your LiDAR in the web_socket.h header file:
-    ```sh
-    #define NUM_DATA 360  
+**LiDAR Configuration:**
+Define the number of samples from your LiDAR in the web_socket.h header file:
+```c
+#define NUM_DATA 360 
+```
 
--**WebSocket Port:**
-    The default WebSocket port is set to 9090. This can be changed if if needed.
-    ```sh
-    const std::string WEB_SOCKET_ADDRESS = "ws://localhost:9090"; 
+**WebSocket Port:**
+The default WebSocket port is set to 9090. This can be changed if needed.
+```c
+const std::string WEB_SOCKET_ADDRESS = "ws://localhost:9090"; 
+```
 
--**Window Size:**
-    Modify the WIDTH and HEIGHT parameters in the configurations.h header file to change the visualization window size:
-    ```sh
-    #define GRID_WIDTH 840
-    #define GRID_HEIGHT 840
+**Window Size:**
+Modify the WIDTH and HEIGHT parameters in the configurations.h header file to change the visualization window size:
+```c
+#define GRID_WIDTH 840
+#define GRID_HEIGHT 840
+```
 
 ## Running the Code
 
