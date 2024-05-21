@@ -29,7 +29,6 @@ This project provides a complete C++ implementation of the Hector SLAM (Simultan
    git clone https://github.com/your-username/hector-slam-cpp.git
    cd hector-slam-cpp
 2. **Install Dependencies:**
-   ```sh
    Make sure SFML, WebSocket++, and ROS (with rosbridge_server) are installed on your system.
 3. **Build the Project:**
    ```sh
@@ -38,17 +37,14 @@ This project provides a complete C++ implementation of the Hector SLAM (Simultan
 ## Configuration
 
 -**LiDAR Configuration:**
-    ```sh
     Define the number of samples from your LiDAR in the appropriate header file:
     ```sh
     #define NUM_SAMPLES 360  // Example value
 
 -**WebSocket Port:**
-    ```sh
     The default WebSocket port is set to 9090. This can be changed in the configuration file if needed.
 
 -**Window Size:**
-    ```sh
     Modify the WIDTH and HEIGHT parameters in the header file to change the visualization window size:
     ```sh
     #define WIDTH 800
@@ -57,13 +53,11 @@ This project provides a complete C++ implementation of the Hector SLAM (Simultan
 ## Running the Code
 
 1. **Start ROS Bridge:**
-    ```sh
     Before running the code, start the ROS bridge to enable WebSocket communication:
     ```sh
     roslaunch rosbridge_server rosbridge_websocket.launch
 
 2. **Run the SLAM Algorithm:**
-    ```sh
     After building the project, run the executable:
     ```sh
     ./hector_slam
@@ -75,7 +69,7 @@ The SLAM process will be visualized in a window created using the SFML library. 
 ## Demonstration
 
 - YouTube Demo: [Link to YouTube video demonstrating the project](https://youtu.be/B0aX1W8MLuA?si=9Lh70ry8uCzIiK7L)
-<iframe width="560" height="315" src="https://youtu.be/B0aX1W8MLuA?si=9Lh70ry8uCzIiK7L" frameborder="0" allowfullscreen></iframe>
+<iframe width="560" height="315" src="https://www.youtube.com/embed/B0aX1W8MLuA?si=9Lh70ry8uCzIiK7L" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Additional Resources
 
