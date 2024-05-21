@@ -70,7 +70,7 @@ The SLAM process will be visualized in a window created using the SFML library. 
 
 - YouTube Demo: [Link to YouTube video demonstrating the project](https://youtu.be/B0aX1W8MLuA?si=9Lh70ry8uCzIiK7L)
 
-<iframe width="560" height="315" src="https://www.youtube.com/B0aX1W8MLuA?si=9Lh70ry8uCzIiK7L" frameborder="0" allowfullscreen></iframe>
+[![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/B0aX1W8MLuA/0.jpg)](https://www.youtube.com/watch?v=B0aX1W8MLuA)
 
 ## Additional Resources
 
